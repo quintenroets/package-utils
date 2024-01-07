@@ -1,4 +1,4 @@
-from python_package_template import main
+from package_utils import main
 
 
 def test_main() -> None:

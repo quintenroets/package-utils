@@ -1,5 +1,5 @@
 import pytest
-from python_package_template import cli
+from package_utils import cli
 
 
 def test_testing() -> None:

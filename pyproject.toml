@@ -1,5 +1,5 @@
 [project]
-name = "python-package-qtemplate"
+name = "package-utils"
 version = "0.1.0"
 description = "Template for Python package published on PyPI"
 authors = [{name = "Quinten Roets", email = "qdr2104@columbia.edu"}]
@@ -22,10 +22,10 @@ dev = [
 ]
 
 [project.urls]
-"Source Code" = "https://github.com/quintenroets/python-package-template"
+"Source Code" = "https://github.com/quintenroets/package-utils"
 
 [project.scripts]
-python_package_template = "python_package_template.cli:entry_point"
+package_utils = "package_utils.cli:entry_point"
 
 [build-system]
 requires = ["setuptools"]
@@ -64,4 +64,4 @@ known-first-party = ["src"]
 "__init__.py" = ["F401"]
 
 [tool.setuptools.package-data]
-python_package_template = ["py.typed"]
+package_utils = ["py.typed"]

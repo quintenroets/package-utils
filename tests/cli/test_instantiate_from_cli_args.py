@@ -13,6 +13,10 @@ from pytest import CaptureFixture
 
 @dataclass
 class Options:
+    """
+    Options.
+    """
+
     debug: bool = False
     config_path: Path = Path.draft
     log_path: Path | None = None
@@ -78,3 +82,4 @@ def test_help(monkeypatch: MonkeyPatch, capsys: CaptureFixture[str]) -> None:
 
     captured = capsys.readouterr()
     assert "Usage: " in captured.out
+    assert str(Options.__doc__).strip() in captured.out

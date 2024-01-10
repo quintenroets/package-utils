@@ -3,10 +3,8 @@
 ![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
 
 ## Usage
-Run
-```shell
-package_utils
-```
+see examples in [tests](https://github.com/quintenroets/package-utils/tree/main/tests)
+
 ## Installation
 ```shell
 pip install package-utils

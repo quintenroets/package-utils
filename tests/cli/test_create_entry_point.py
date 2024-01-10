@@ -48,9 +48,22 @@ def test_entry_point(
         entry_point()
 
 
-def test_entry_point_debug(
+def test_with_class_specified(
     monkeypatch: MonkeyPatch, methods: tuple[Callable[..., str | None], ...]
 ) -> None:
+    clear_cli_args(monkeypatch)
+    entry_point = create_entry_point(Options.run, Options)
+    entry_point()
+
+
+def test_option(
+    monkeypatch: MonkeyPatch, methods: tuple[Callable[..., str | None], ...]
+) -> None:
+    clear_cli_args(monkeypatch)
+    for method in methods:
+        entry_point = create_entry_point(method)
+        result = entry_point()
+        assert result is None
     set_cli_args(monkeypatch, "--debug")
     for method in methods:
         entry_point = create_entry_point(method)
@@ -58,7 +71,7 @@ def test_entry_point_debug(
         assert result == Options.message
 
 
-def test_entry_point_docstring(
+def test_docstring(
     monkeypatch: MonkeyPatch,
     methods: tuple[Callable[..., str | None], ...],
     capsys: CaptureFixture[str],

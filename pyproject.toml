@@ -17,6 +17,7 @@ dev = [
     "package-dev-utils>=0.1",
     "pre-commit",
     "pytest",
+    "superpathlib",
 ]
 
 [project.urls]

@@ -29,7 +29,9 @@ class EntryPoint(Generic[T]):
         if self.argument_class is None:
             self.extract_argument_class()
         if self.argument_class is not None:
-            self.argument_class.__doc__ = self.method.__doc__
+            method_doc = self.method.__doc__
+            if method_doc is not None:
+                self.argument_class.__doc__ = method_doc
 
     def extract_argument_class(self) -> None:
         type_hints = typing.get_type_hints(self.method)

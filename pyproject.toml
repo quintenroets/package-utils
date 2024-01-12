@@ -1,7 +1,7 @@
 [project]
 name = "package-utils"
 version = "0.1.1"
-description = "Template for Python package published on PyPI"
+description = "Common utilities for Python packages"
 authors = [{name = "Quinten Roets", email = "qdr2104@columbia.edu"}]
 license = {text = "MIT"}
 readme = "README.md"

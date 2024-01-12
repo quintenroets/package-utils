@@ -4,7 +4,6 @@ from collections.abc import Callable
 
 import pytest
 import test_instantiate_from_cli_args
-from _pytest.monkeypatch import MonkeyPatch
 from package_dev_utils.tests.args import cli_args, no_cli_args
 from package_utils.cli import create_entry_point
 from pytest import CaptureFixture
@@ -67,7 +66,6 @@ def test_option(methods: tuple[Callable[..., str | None], ...]) -> None:
 
 @cli_args("--help")
 def test_docstring(
-    monkeypatch: MonkeyPatch,
     methods: tuple[Callable[..., str | None], ...],
     capsys: CaptureFixture[str],
 ) -> None:

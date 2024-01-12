@@ -29,6 +29,7 @@ class Options:
     log_path: Path | None = None
     verbosity: int = field(init=False)
     message: str = "Hello World!"
+    optional_message: str | None = "Hello World!"
 
     def __post_init__(self) -> None:
         self.verbosity = 0
@@ -75,6 +76,13 @@ def test_message() -> None:
     with cli_args("--message", message):
         options = instantiate_from_cli_args(Options)
         assert options.message == message
+
+
+def test_optional_message() -> None:
+    message = "Hello!"
+    with cli_args("--optional-message", message):
+        options = instantiate_from_cli_args(Options)
+        assert options.optional_message == message
 
 
 @cli_args("--verbosity", 1)

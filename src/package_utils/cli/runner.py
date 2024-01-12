@@ -5,7 +5,7 @@ import typing
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from enum import Enum
-from typing import Annotated, Any, Generic, TypeVar
+from typing import Annotated, Any, Generic, Optional, TypeVar
 
 import typer
 from plib import Path
@@ -55,9 +55,23 @@ class CliRunner(Generic[T]):
         if path_class is not None:
             # monkey patch path convertor
             typer.main.param_path_convertor = path_class
+        else:
+            annotation = self.adapt_optional_syntax(annotation)
         is_argument = self.is_argument(parameter.annotation)
         Option = typer.Argument if is_argument else typer.Option
         return Annotated[annotation, Option(path_type=path_class)]
+
+    @classmethod
+    def adapt_optional_syntax(cls, annotation: object) -> object | None:
+        annotations = cls.extract_annotations(annotation)
+        if any(sub_annotation is types.NoneType for sub_annotation in annotations):
+            optional_annotation = next(
+                sub_annotation
+                for sub_annotation in annotations
+                if sub_annotation is not types.NoneType
+            )
+            annotation = Optional[optional_annotation]  # noqa: UP007
+        return annotation
 
     @classmethod
     def extract_path_class(cls, annotation: object) -> object | None:

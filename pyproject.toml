@@ -12,20 +12,14 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "build",
     "coverage",
     "hypothesis",
-    "package-dev-tools>=0.2",
     "pre-commit",
     "pytest",
-    "pytest-mypy-plugins",
 ]
 
 [project.urls]
 "Source Code" = "https://github.com/quintenroets/package-utils"
-
-[project.scripts]
-package_utils = "package_utils.cli:entry_point"
 
 [build-system]
 requires = ["setuptools"]

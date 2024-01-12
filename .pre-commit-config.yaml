@@ -25,6 +25,7 @@ repos:
       - id: mypy
         additional_dependencies: [
           "hypothesis",
+          "package-dev-utils>=0.1.1",
           "pytest-mypy-plugins",
         ]
   - repo: https://github.com/quintenroets/package-dev-tools

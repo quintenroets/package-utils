@@ -4,6 +4,7 @@ import types
 import typing
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from enum import Enum
 from typing import Annotated, Any, Generic, TypeVar
 
 import typer
@@ -44,6 +45,8 @@ class CliRunner(Generic[T]):
         parameters = self.signature.parameters.values()
         for parameter in parameters:
             annotation = self.create_cli_entry_annotation(parameter)
+            if isinstance(parameter.default, Enum):
+                parameter = parameter.replace(default=parameter.default.value)
             yield parameter.replace(annotation=annotation)
 
     def create_cli_entry_annotation(self, parameter: inspect.Parameter) -> object:
@@ -52,15 +55,31 @@ class CliRunner(Generic[T]):
         if path_class is not None:
             # monkey patch path convertor
             typer.main.param_path_convertor = path_class
-            annotation = Annotated[annotation, typer.Option(path_type=path_class)]
-        return annotation
+        is_argument = self.is_argument(parameter.annotation)
+        Option = typer.Argument if is_argument else typer.Option
+        return Annotated[annotation, Option(path_type=path_class)]
 
     @classmethod
     def extract_path_class(cls, annotation: object) -> object | None:
-        is_union = typing.get_origin(annotation) is types.UnionType
-        type_annotations = typing.get_args(annotation) if is_union else (annotation,)
+        annotations = cls.extract_annotations(annotation)
         path_annotation = None
-        for sub_annotation in type_annotations:
+        for sub_annotation in annotations:
             if issubclass(sub_annotation, Path):
                 path_annotation = sub_annotation
         return path_annotation
+
+    @classmethod
+    def extract_annotations(cls, annotation: object) -> tuple[type, ...]:
+        is_union = typing.get_origin(annotation) is types.UnionType
+        return typing.get_args(annotation) if is_union else (annotation,)
+
+    @classmethod
+    def is_argument(cls, annotation: object) -> bool:
+        return (
+            "typer.Argument(" in annotation
+            if isinstance(annotation, str)
+            else any(
+                isinstance(info, typer.models.ArgumentInfo)
+                for info in typing.get_args(annotation)
+            )
+        )

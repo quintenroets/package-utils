@@ -3,14 +3,15 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import pytest
-import test_instantiate_from_cli_args
 from package_dev_utils.tests.args import cli_args, no_cli_args
 from package_utils.cli import create_entry_point
 from pytest import CaptureFixture
 
+from tests.cli.models import dataclass_model
+
 
 def run_with_arguments(
-    debug: bool = False, message: str = test_instantiate_from_cli_args.Options.message
+    debug: bool = False, message: str = dataclass_model.Options.message
 ) -> str | None:
     """
     Method with arguments.
@@ -25,7 +26,7 @@ def run(options: Options) -> str | None:
     return run_with_arguments(options.debug, options.message)
 
 
-class Options(test_instantiate_from_cli_args.Options):
+class Options(dataclass_model.Options):
     def run(self: Options) -> str | None:
         """
         Instance method.

@@ -3,7 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, is_dataclass
 from typing import Any, Generic, TypeVar
 
-from .runner import CliRunner
+from .cli_runner import Runner
 
 T = TypeVar("T")
 
@@ -18,12 +18,11 @@ class EntryPoint(Generic[T]):
     def __call__(self) -> T:
         self.setup_argument_class()
         if self.argument_class is None:
-            result = CliRunner.run_with_cli_args(self.method)
+            result = Runner(self.method).run_with_cli_args()
         else:
-            instance = CliRunner.run_with_cli_args(self.argument_class)
+            instance = Runner(self.argument_class).run_with_cli_args()
             result = self.method(instance)
-        typed_result = typing.cast(T, result)
-        return typed_result
+        return result
 
     def setup_argument_class(self) -> None:
         if self.argument_class is None:

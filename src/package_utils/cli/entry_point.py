@@ -7,8 +7,6 @@ from .cli_runner import Runner
 
 T = TypeVar("T")
 
-__all__ = ["EntryPoint"]
-
 
 @dataclass
 class EntryPoint(Generic[T]):

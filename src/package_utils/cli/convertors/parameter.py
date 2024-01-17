@@ -1,12 +1,16 @@
+import collections
 import inspect
 import types
 import typing
+from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Annotated, Any, Optional
 
 import typer
-from plib import Path
+
+OptionalPathClass = type[Path] | None
 
 
 @dataclass
@@ -41,11 +45,12 @@ class CliParameter:
 
     def convert_optional_syntax(self) -> None:
         annotations = self.extract_annotations()
-        if any(sub_annotation is types.NoneType for sub_annotation in annotations):
+        is_optional = any(annotation is types.NoneType for annotation in annotations)
+        if is_optional:
             optional_annotation = next(
-                sub_annotation
-                for sub_annotation in annotations
-                if sub_annotation is not types.NoneType
+                annotation
+                for annotation in annotations
+                if annotation is not types.NoneType
             )
             self.annotation = Optional[optional_annotation]  # noqa: UP007
 
@@ -57,9 +62,16 @@ class CliParameter:
                 path_annotation = sub_annotation
         return path_annotation
 
-    def extract_annotations(self) -> tuple[type, ...]:
-        is_union = typing.get_origin(self.annotation) is types.UnionType
-        return typing.get_args(self.annotation) if is_union else (self.annotation,)
+    def extract_annotations(self) -> Iterator[type]:
+        annotations = collections.deque([self.annotation])
+        while annotations:
+            annotation = annotations.popleft()
+            sub_annotations = typing.get_args(annotation)
+            if sub_annotations:
+                annotations.extend(sub_annotations)
+            else:
+                typed_annotation = typing.cast(type, annotation)
+                yield typed_annotation
 
     @property
     def is_argument(self) -> bool:

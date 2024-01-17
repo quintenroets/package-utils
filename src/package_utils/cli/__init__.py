@@ -1,12 +1,10 @@
 from typing import TypeVar
 
-from .entry_point import EntryPoint
+from .entry_point import EntryPoint as create_entry_point
 
 T = TypeVar("T")
 
 __all__ = ["create_entry_point", "instantiate_from_cli_args"]
-
-create_entry_point = EntryPoint
 
 
 def instantiate_from_cli_args(_class: type[T]) -> T:

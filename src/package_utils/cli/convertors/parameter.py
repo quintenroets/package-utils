@@ -34,17 +34,20 @@ class CliParameter:
         path_class = self.extract_path_class()
         if path_class is not None:
             self.monkey_patch_path_convertor(path_class)
-        else:
-            self.convert_optional_syntax()
+        self.convert_optional_syntax()
         Option = typer.Argument if self.is_argument else typer.Option
         return Annotated[self.annotation, Option(path_type=path_class)]
 
     @classmethod
     def monkey_patch_path_convertor(cls, path_class: type[Path]) -> None:
-        typer.main.param_path_convertor = path_class
+        def convert(path: Path | None) -> Path | None:
+            return None if path is None else path_class(path)
+
+        typer.main.param_path_convertor = convert
 
     def convert_optional_syntax(self) -> None:
-        annotations = self.extract_annotations()
+        annotations_generator = self.extract_annotations()
+        annotations = list(annotations_generator)
         is_optional = any(annotation is types.NoneType for annotation in annotations)
         if is_optional:
             optional_annotation = next(

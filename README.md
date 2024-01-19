@@ -4,7 +4,7 @@
 ![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
 
 ## Usage
-see examples in [tests](https://github.com/quintenroets/package-utils/tree/main/tests)
+see examples in [tests](https://github.com/quintenroets/package-utils/tree/main/tests) and [pyhton-package-template](https://github.com/quintenroets/python-package-template/blob/main/src/python_package_template/cli/entry_point.py)
 
 ## Installation
 ```shell

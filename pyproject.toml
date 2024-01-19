@@ -41,7 +41,7 @@ explicit_package_bases = true
 
 [tool.pytest.ini_options]
 pythonpath = [
-  "src", "."
+  "src", ".",
 ]
 
 [tool.ruff]

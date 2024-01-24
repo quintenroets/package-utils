@@ -14,7 +14,7 @@ dependencies = [
 dev = [
     "superpathlib >=1.3.7, <2",
     "package-dev-tools >=0.3.1, <1",
-    "package-dev-utils >= 0.1.3, <1",
+    "package-dev-utils >=0.1.3, <1",
 ]
 
 [project.urls]
@@ -38,7 +38,7 @@ explicit_package_bases = true
 
 [tool.pytest.ini_options]
 pythonpath = [
-  "src", ".",
+    "src", ".",
 ]
 
 [tool.ruff]

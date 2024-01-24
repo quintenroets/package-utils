@@ -24,6 +24,7 @@ class Options:
     message: str = "Hello World!"
     optional_message: str | None = "Hello World!"
     working_directory: Path = field(default_factory=Path.cwd)
+    n_retries: int = 0
 
     def __post_init__(self) -> None:
         self.verbosity = 0

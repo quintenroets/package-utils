@@ -51,6 +51,7 @@ def verify_defaults(options: Options) -> None:
     assert options.debug == Options.debug
     assert options.config_path == Options.config_path
     assert options.log_path == Options.log_path
+    assert options.n_retries == Options.n_retries
 
 
 @class_argument
@@ -144,3 +145,10 @@ def test_enum(class_: type[Options]) -> None:
 def test_working_directory(class_: type[Options]) -> None:
     options = instantiate_from_cli_args(class_)
     assert options.working_directory == Path.cwd() / "subfolder"
+
+
+@pytest.mark.parametrize("class_", [dataclass_model.Options])
+@cli_args("--n-retries", "1")
+def test_type_conversion(class_: type[Options]) -> None:
+    options = instantiate_from_cli_args(class_)
+    assert options.n_retries == 1

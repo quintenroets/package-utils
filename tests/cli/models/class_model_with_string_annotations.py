@@ -23,6 +23,7 @@ class Options:
         log_path: Path | None = dataclass_model.Options.log_path,
         message: str = dataclass_model.Options.message,
         optional_message: str | None = dataclass_model.Options.optional_message,
+        n_retries: int = 0,
     ) -> None:
         self.action = action
         self.action_on_error = action_on_error
@@ -32,3 +33,4 @@ class Options:
         self.verbosity = 0
         self.message = message
         self.optional_message = optional_message
+        self.n_retries = n_retries

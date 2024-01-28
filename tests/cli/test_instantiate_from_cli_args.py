@@ -1,5 +1,10 @@
+import random
+from collections.abc import Iterator
+
 import click
 import pytest
+from hypothesis import given, strategies
+from hypothesis.strategies import SearchStrategy
 from models import (
     class_model,
     class_model_with_string_annotations,
@@ -12,33 +17,28 @@ from package_utils.cli import instantiate_from_cli_args
 from plib import Path
 from pytest import CaptureFixture
 
-classes = [
-    class_model.Options,
-    dataclass_model.Options,
-    dataclass_model_with_string_annotations.Options,
-    class_model_with_string_annotations.Options,
-]
-class_argument = pytest.mark.parametrize("class_", classes)
+
+def text_strategy() -> SearchStrategy[str]:
+    alphabet = strategies.characters(blacklist_categories=["Cc", "Cs", "Zs", "P", "S"])
+    return strategies.text(alphabet=alphabet)
+
+
+normal_classes = [class_model.Options, class_model_with_string_annotations.Options]
+dataclasses = [dataclass_model.Options, dataclass_model_with_string_annotations.Options]
+dataclass_argument = pytest.mark.parametrize("class_", dataclasses)
+normal_class_argument = pytest.mark.parametrize("class_", dataclasses)
+class_argument = pytest.mark.parametrize("class_", [*dataclasses, *normal_classes])
 
 
 @no_cli_args
-@pytest.mark.parametrize(
-    "class_",
-    [class_model.Options, class_model_with_string_annotations.Options],
-)
+@normal_class_argument
 def test_class_defaults(class_: type[Options]) -> None:
     options = instantiate_from_cli_args(class_)
     verify_defaults(options)
 
 
 @no_cli_args
-@pytest.mark.parametrize(
-    "class_",
-    [
-        dataclass_model.Options,
-        dataclass_model_with_string_annotations.Options,
-    ],
-)
+@dataclass_argument
 def test_dataclass_defaults(class_: type[Options]) -> None:
     options = instantiate_from_cli_args(class_)
     verify_defaults(options)
@@ -55,55 +55,52 @@ def verify_defaults(options: Options) -> None:
 
 
 @class_argument
-@cli_args("--debug")
-def test_debug_attribute_true(class_: type[Options]) -> None:
-    options = instantiate_from_cli_args(class_)
-    assert options.debug is True
-
-
-@class_argument
-@cli_args("--no-debug")
-def test_debug_attribute_false(class_: type[Options]) -> None:
-    options = instantiate_from_cli_args(class_)
-    assert options.debug is False
+@given(debug=strategies.booleans())
+def test_debug_attribute(class_: type[Options], debug: bool) -> None:
+    option_str = "--debug" if debug else "--no-debug"
+    with cli_args(option_str):
+        options = instantiate_from_cli_args(class_)
+    assert options.debug is debug
 
 
 @class_argument
 def test_config_path(class_: type[Options]) -> None:
-    with Path.tempfile() as tmp:
-        with cli_args("--config-path", tmp):
-            options = instantiate_from_cli_args(class_)
-            assert options.config_path == tmp
+    config_path = Path.tempfile(create=False)
+    with cli_args("--config-path", config_path):
+        options = instantiate_from_cli_args(class_)
+    assert options.config_path == config_path
 
 
 @class_argument
 def test_log_path(class_: type[Options]) -> None:
-    with Path.tempfile() as tmp:
-        with cli_args("--log-path", tmp):
-            options = instantiate_from_cli_args(class_)
-            assert options.log_path == tmp
+    log_path = Path.tempfile(create=False)
+    with cli_args("--log-path", log_path):
+        options = instantiate_from_cli_args(class_)
+    assert options.log_path == log_path
 
 
 @class_argument
-def test_message(class_: type[Options]) -> None:
-    message = "Hello!"
+@given(message=text_strategy())
+def test_message(class_: type[Options], message: str) -> None:
     with cli_args("--message", message):
         options = instantiate_from_cli_args(class_)
-        assert options.message == message
+    assert options.message == message
 
 
 @class_argument
-def test_optional_message(class_: type[Options]) -> None:
-    message = "Hello!"
+@given(message=text_strategy())
+def test_optional_message(class_: type[Options], message: str) -> None:
     with cli_args("--optional-message", message):
         options = instantiate_from_cli_args(class_)
-        assert options.optional_message == message
+    assert options.optional_message == message
 
 
 @class_argument
-@cli_args("--verbosity", 1)
-def test_verbosity_attribute_not_exposed(class_: type[Options]) -> None:
-    with pytest.raises(click.exceptions.NoSuchOption):
+@given(verbosity=strategies.integers())
+def test_verbosity_attribute_not_exposed(class_: type[Options], verbosity: int) -> None:
+    test_args = cli_args("--verbosity", verbosity)
+    expect_exception = pytest.raises(click.exceptions.NoSuchOption)
+    with test_args, expect_exception:
         instantiate_from_cli_args(class_)
 
 
@@ -120,35 +117,95 @@ def test_help(class_: type[Options], capsys: CaptureFixture[str]) -> None:
 
 
 @class_argument
-@cli_args("do_nothing")
-def test_positional_argument(class_: type[Options]) -> None:
-    options = instantiate_from_cli_args(class_)
-    assert options.action == Action.do_nothing
+@given(action=strategies.sampled_from(Action))
+def test_positional_argument(class_: type[Options], action: Action) -> None:
+    with cli_args(action.value):
+        options = instantiate_from_cli_args(class_)
+    assert options.action == action
 
 
 @class_argument
-@cli_args("--action", "do_nothing")
-def test_positional_argument_no_option(class_: type[Options]) -> None:
-    with pytest.raises(click.exceptions.NoSuchOption):
+@given(action=strategies.sampled_from(Action))
+def test_positional_argument_no_option(class_: type[Options], action: Action) -> None:
+    test_args = cli_args("--action", action.value)
+    expect_exception = pytest.raises(click.exceptions.NoSuchOption)
+    with test_args, expect_exception:
         instantiate_from_cli_args(class_)
 
 
 @class_argument
-@cli_args("--action-on-error", "do_nothing")
-def test_enum(class_: type[Options]) -> None:
-    options = instantiate_from_cli_args(class_)
-    assert options.action_on_error == Action.do_nothing
+@given(action=strategies.sampled_from(Action))
+def test_enum(class_: type[Options], action: Action) -> None:
+    with cli_args("--action-on-error", action.value):
+        options = instantiate_from_cli_args(class_)
+    assert options.action_on_error == action
 
 
-@pytest.mark.parametrize("class_", [dataclass_model.Options])
-@cli_args("--working-directory", Path.cwd() / "subfolder")
+@dataclass_argument
 def test_working_directory(class_: type[Options]) -> None:
-    options = instantiate_from_cli_args(class_)
-    assert options.working_directory == Path.cwd() / "subfolder"
+    path = Path.tempfile(create=False)
+    with cli_args("--working-directory", path):
+        options = instantiate_from_cli_args(class_)
+    assert options.working_directory == path
 
 
-@pytest.mark.parametrize("class_", [dataclass_model.Options])
-@cli_args("--n-retries", "1")
-def test_type_conversion(class_: type[Options]) -> None:
-    options = instantiate_from_cli_args(class_)
-    assert options.n_retries == 1
+@class_argument
+@given(n_retries=strategies.integers())
+def test_type_conversion(class_: type[Options], n_retries: int) -> None:
+    with cli_args("--n-retries", n_retries):
+        options = instantiate_from_cli_args(class_)
+    assert options.n_retries == n_retries
+
+
+@class_argument
+@given(
+    action=strategies.sampled_from(Action),
+    action_on_error=strategies.sampled_from(Action),
+    debug=strategies.booleans(),
+    message=text_strategy(),
+    optional_message=text_strategy(),
+    n_retries=strategies.integers(),
+)
+def test_combined_arguments(
+    class_: type[Options],
+    action: Action,
+    action_on_error: Action,
+    debug: bool,
+    message: str,
+    optional_message: str,
+    n_retries: int,
+) -> None:
+    debug_string = "debug" if debug else "no-debug"
+    options_dict = {
+        "action-on-error": action_on_error.value,
+        debug_string: None,
+        "config-path": Path.tempfile(create=False),
+        "log-path": Path.tempfile(create=False),
+        "message": message,
+        "optional-message": optional_message,
+        "n-retries": n_retries,
+    }
+    option_arguments = generate_arguments(options_dict)
+    with cli_args(action.value, *option_arguments):
+        options = instantiate_from_cli_args(class_)
+    assert options.action == action
+    assert options.action_on_error == action_on_error
+    assert options.debug == debug
+    assert options.config_path == options_dict["config-path"]
+    assert options.log_path == options_dict["log-path"]
+    assert options.message == message
+    assert options.optional_message == optional_message
+    assert options.n_retries == n_retries
+
+
+def generate_arguments(
+    options: dict[str, str | None], shuffle: bool = True
+) -> Iterator[str]:
+    keys = list(options.keys())
+    if shuffle:
+        random.shuffle(keys)
+    for key in keys:
+        yield f"--{key}"
+        value = options[key]
+        if value is not None:
+            yield value

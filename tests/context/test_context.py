@@ -2,13 +2,12 @@ import os
 import typing
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, TypeAlias
+from typing import Any
 from unittest.mock import patch
 
 import dacite
 import pytest
 from package_utils.context import Context as Context_
-from package_utils.context import Models
 from plib import Path
 
 from tests.context.models.config import Config
@@ -17,10 +16,13 @@ from tests.context.models.secrets_ import Secrets
 
 NestedDict = dict[str, str | dict[str, str]]
 
-models = Models(Options, Config, Secrets)
+
+Context = Context_[Options, Config, Secrets]
 
 
-Context: TypeAlias = Context_[Config, Options, Secrets]
+@pytest.fixture
+def context() -> Context:
+    return Context(Options, Config, Secrets)
 
 
 @contextmanager
@@ -33,8 +35,7 @@ def filled_path(values: dict[str, Any]) -> Iterator[Path]:
         path.unlink()
 
 
-def test_specified_config() -> None:
-    context = Context(models)
+def test_specified_config(context: Context) -> None:
     output_path = Path.tempfile(create=False)
     secrets_path = Path.tempfile(create=False)
     config_values = {
@@ -48,8 +49,7 @@ def test_specified_config() -> None:
     assert config.secrets_path == secrets_path
 
 
-def test_non_existing_config_value_detected() -> None:
-    context = Context(models)
+def test_non_existing_config_value_detected(context: Context) -> None:
     expect_exception = pytest.raises(dacite.exceptions.UnexpectedDataError)
     config_values = {"non_existing": ""}
     with expect_exception, filled_path(config_values) as config_path:
@@ -63,8 +63,7 @@ def secrets() -> NestedDict:
     return {"token": "token", "api": api_secrets}
 
 
-def test_secrets_from_file(secrets: NestedDict) -> None:
-    context = Context(models)
+def test_secrets_from_file(context: Context, secrets: NestedDict) -> None:
     with filled_path(secrets) as secrets_path:
         context.config.secrets_path = secrets_path
         verify_secret_values(context, secrets)
@@ -92,15 +91,15 @@ def secrets_in_environment(secrets: dict[str, str]) -> Iterator[None]:
 
 
 def test_secrets_from_environment(
-    secrets: NestedDict, environment_secrets: dict[str, str]
+    context: Context, secrets: NestedDict, environment_secrets: dict[str, str]
 ) -> None:
-    context = Context(models)
     with secrets_in_environment(environment_secrets):
         verify_secret_values(context, secrets)
 
 
-def test_secrets_from_environment_and_file(secrets: NestedDict) -> None:
-    context = Context(models)
+def test_secrets_from_environment_and_file(
+    context: Context, secrets: NestedDict
+) -> None:
     token = secrets.pop("token")
     environment_secrets = {"token": typing.cast(str, token)}
     filled_secrets_path = filled_path(secrets)
@@ -112,9 +111,8 @@ def test_secrets_from_environment_and_file(secrets: NestedDict) -> None:
 
 
 def test_secrets_from_command(
-    environment_secrets: dict[str, str], secrets: NestedDict
+    context: Context, environment_secrets: dict[str, str], secrets: NestedDict
 ) -> None:
-    context = Context(models)
     filled_secrets_path = filled_path({})
     patched_command = patch("cli.get", new=lambda _, key: os.environ[key])
     environment_with_secrets = secrets_in_environment(environment_secrets)

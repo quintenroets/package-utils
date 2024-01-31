@@ -5,5 +5,5 @@ from plib import Path
 
 @dataclass
 class Config:
-    output_path: Path = None
-    secrets_path: Path = None
+    output_path: Path | None = None
+    secrets_path: Path | None = None

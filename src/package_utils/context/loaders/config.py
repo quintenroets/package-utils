@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
@@ -18,7 +20,7 @@ T = TypeVar("T")
 class Loader(OptionsLoader[Config], Generic[Options, Config]):
     options_loader: OptionsLoader[Options] | None = None
 
-    def load(self) -> "DataclassInstance":
+    def load(self) -> DataclassInstance:
         options = None if self.options_loader is None else self.options_loader.value
         optional_path = options and getattr(options, "config_path", None)
         path = typing.cast(Path | None, optional_path)

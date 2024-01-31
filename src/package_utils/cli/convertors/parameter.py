@@ -35,13 +35,14 @@ class CliParameter:
         if path_class is not None:
             self.monkey_patch_path_convertor(path_class)
         self.convert_optional_syntax()
-        Option = typer.Argument if self.is_argument else typer.Option
-        return Annotated[self.annotation, Option(path_type=path_class)]
+        OptionInfo = typer.Argument if self.is_argument else typer.Option
+        option_info = OptionInfo(path_type=path_class)  # type: ignore
+        return Annotated[self.annotation, option_info]
 
     @classmethod
     def monkey_patch_path_convertor(cls, path_class: type[Path]) -> None:
-        def convert(path: Path | None) -> Path | None:
-            return None if path is None else path_class(path)
+        def convert(value: str | None = None) -> Path | None:
+            return None if value is None else path_class(value)
 
         typer.main.param_path_convertor = convert
 

@@ -1,12 +1,15 @@
 import typing
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 import dacite
 from plib import Path
 
 from ..models import Config, Options
 from .options import Loader as OptionsLoader
+
+if typing.TYPE_CHECKING:
+    from _typeshed import DataclassInstance  # pragma: nocover
 
 T = TypeVar("T")
 
@@ -15,14 +18,18 @@ T = TypeVar("T")
 class Loader(OptionsLoader[Config], Generic[Options, Config]):
     options_loader: OptionsLoader[Options] | None = None
 
-    def load(self) -> Config:
+    def load(self) -> "DataclassInstance":
         options = None if self.options_loader is None else self.options_loader.value
-        path = options and getattr(options, "config_path", None)
-        model = typing.cast(type[Config], self.model)
-        return model() if path is None else self.load_from_file(model, path)
+        optional_path = options and getattr(options, "config_path", None)
+        path = typing.cast(Path | None, optional_path)
+        return (
+            self.typed_model()
+            if path is None
+            else self.load_from_file(self.typed_model, path)
+        )
 
     @classmethod
     def load_from_file(cls, class_type: type[T], path: Path) -> T:
         config = dacite.Config(type_hooks={Path: Path}, strict=True)
-        result = dacite.from_dict(class_type, path.yaml, config=config)
-        return typing.cast(T, result)
+        info = typing.cast(dict[str, Any], path.yaml)
+        return dacite.from_dict(class_type, info, config=config)

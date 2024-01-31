@@ -5,24 +5,28 @@ from typing import TYPE_CHECKING, Generic, TypeVar
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance  # pragma: nocover
 
-Model = TypeVar("Model", bound="DataclassInstance")
+Model = TypeVar("Model", bound="DataclassInstance | None")
 
 
 @dataclass
 class Loader(Generic[Model]):
-    model: type[Model] | None = None
+    model: type[Model] | None
     _value: Model | None = None
 
     @property
-    def value(self) -> Model | None:
+    def typed_model(self) -> type["DataclassInstance"]:
+        return typing.cast(type["DataclassInstance"], self.model)
+
+    @property
+    def value(self) -> Model:
         if self._value is None and self.model is not None:
-            self._value = self.load()
-        return self._value
+            value = self.load()
+            self.value = typing.cast(Model, value)
+        return typing.cast(Model, self._value)
 
     @value.setter
     def value(self, value: Model | None) -> None:
         self._value = value
 
-    def load(self) -> Model:
-        self.model = typing.cast(type[Model], self.model)
-        return self.model()
+    def load(self) -> "DataclassInstance":
+        return self.typed_model()

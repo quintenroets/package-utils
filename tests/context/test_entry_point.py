@@ -2,19 +2,16 @@ from hypothesis import given, strategies
 from package_dev_utils.tests.args import cli_args, no_cli_args
 from package_utils.context import Context
 from package_utils.context.entry_point import create_entry_point
-from package_utils.context.models import Models
 from plib import Path
 
 from tests.context.models.config import Config
 from tests.context.models.options import Options
 from tests.context.models.secrets_ import Secrets
 
-models = Models(Options, Config, Secrets)
-
 
 @no_cli_args
 def test_entry_point() -> None:
-    context = Context(models)
+    context = Context(Options, Config, Secrets)
     entry_point = create_entry_point(lambda: None, context)
     entry_point()
 
@@ -25,7 +22,7 @@ def test_specified_options(debug: bool) -> None:
         assert context.options.config_path == config_path
         assert context.options.debug == debug
 
-    context = Context(models)
+    context = Context(Options, Config, Secrets)
     config_path = Path.tempfile(create=False)
     debug_str = "--debug" if debug else "--no-debug"
     entry_point = create_entry_point(verify_options, context)

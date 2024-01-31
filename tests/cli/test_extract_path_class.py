@@ -1,6 +1,5 @@
 import inspect
 import pathlib
-import typing
 from typing import Optional
 
 import pytest
@@ -10,8 +9,7 @@ from plib import Path
 
 def extract_path_class(annotation: object) -> type[pathlib.Path] | None:
     parameter = inspect.Parameter("parameter", inspect.Parameter.POSITIONAL_OR_KEYWORD)
-    path_class = CliParameter(parameter, annotation).extract_path_class()
-    return typing.cast(type[pathlib.Path] | None, path_class)
+    return CliParameter(parameter, annotation).extract_path_class()
 
 
 @pytest.mark.parametrize(

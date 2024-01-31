@@ -28,7 +28,8 @@ class SecretLoader:
     name: str
 
     def load(self) -> str:
-        return os.environ.get(self.name) or cli.get("pw", self.name)
+        result = os.environ.get(self.name) or cli.get("pw", self.name)
+        return typing.cast(str, result)
 
 
 @dataclass
@@ -36,8 +37,7 @@ class DataclassLoader(Generic[T]):
     class_: type[T]
 
     def load(self) -> T:
-        instance = dacite.from_dict(self.class_, {})
-        return typing.cast(T, instance)
+        return dacite.from_dict(self.class_, {})
 
 
 @dataclass
@@ -45,12 +45,10 @@ class Loader(options.Loader[Secrets], Generic[Options, Config, Secrets]):
     config_loader: ConfigLoader[Options, Config] | None = None
     delimiter: str = "_"
 
-    def load(self) -> Secrets:
-        model = typing.cast(type[Secrets], self.model)
-        self.add_defaults(model)
+    def load(self) -> DataclassInstance:
+        self.add_defaults(self.typed_model)
         file_secrets = self.load_file_secrets()
-        value = dacite.from_dict(model, file_secrets)
-        return typing.cast(Secrets, value)
+        return dacite.from_dict(self.typed_model, file_secrets)
 
     def load_file_secrets(self) -> dict[str, str]:
         config = None if self.config_loader is None else self.config_loader.value

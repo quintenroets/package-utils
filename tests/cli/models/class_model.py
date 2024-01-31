@@ -3,8 +3,8 @@ from typing import Annotated
 import typer
 from plib import Path
 
-from . import dataclass_model
-from .dataclass_model import Action
+from tests.cli.models import dataclass_model
+from tests.cli.models.dataclass_model import Action
 
 
 class Options:

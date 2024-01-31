@@ -5,17 +5,18 @@ import click
 import pytest
 from hypothesis import given, strategies
 from hypothesis.strategies import SearchStrategy
-from models import (
+from package_dev_utils.tests.args import cli_args, no_cli_args
+from package_utils.cli import instantiate_from_cli_args
+from plib import Path
+from pytest import CaptureFixture
+
+from tests.cli.models import (
     class_model,
     class_model_with_string_annotations,
     dataclass_model,
     dataclass_model_with_string_annotations,
 )
-from models.dataclass_model import Action, Options
-from package_dev_utils.tests.args import cli_args, no_cli_args
-from package_utils.cli import instantiate_from_cli_args
-from plib import Path
-from pytest import CaptureFixture
+from tests.cli.models.dataclass_model import Action, Options
 
 
 def text_strategy() -> SearchStrategy[str]:
@@ -199,8 +200,8 @@ def test_combined_arguments(
 
 
 def generate_arguments(
-    options: dict[str, str | None], shuffle: bool = True
-) -> Iterator[str]:
+    options: dict[str, int | Path | str | None], shuffle: bool = True
+) -> Iterator[int | Path | str]:
     keys = list(options.keys())
     if shuffle:
         random.shuffle(keys)

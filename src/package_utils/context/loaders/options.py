@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generic, TypeVar
@@ -14,7 +16,7 @@ class Loader(Generic[Model]):
     _value: Model | None = None
 
     @property
-    def typed_model(self) -> type["DataclassInstance"]:
+    def typed_model(self) -> type[DataclassInstance]:
         return typing.cast(type["DataclassInstance"], self.model)
 
     @property
@@ -28,5 +30,5 @@ class Loader(Generic[Model]):
     def value(self, value: Model | None) -> None:
         self._value = value
 
-    def load(self) -> "DataclassInstance":
+    def load(self) -> DataclassInstance:
         return self.typed_model()

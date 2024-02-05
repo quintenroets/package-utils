@@ -28,7 +28,8 @@ class SecretLoader:
     name: str
 
     def load(self) -> str:
-        result = os.environ.get(self.name) or cli.get("pw", self.name)
+        env_name = self.name.upper()
+        result = os.environ.get(env_name) or cli.get("pw", self.name)
         return typing.cast(str, result)
 
 
@@ -63,11 +64,8 @@ class Loader(options.Loader[Secrets], Generic[Options, Config, Secrets]):
         parent_name: str = "",
     ) -> None:
         for field in fields(class_type):
-            full_name = (
-                f"{parent_name}{self.delimiter}{field.name}"
-                if parent_name
-                else field.name
-            )
+            name = field.name
+            full_name = f"{parent_name}{self.delimiter}{name}" if parent_name else name
             if field.default_factory == dataclasses.MISSING:
                 if is_dataclass(field.type):
                     self.add_defaults(field.type, full_name)

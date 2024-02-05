@@ -83,10 +83,11 @@ def environment_secrets() -> dict[str, str]:
 
 @contextmanager
 def secrets_in_environment(secrets: dict[str, str]) -> Iterator[None]:
-    for k, v in secrets.items():
+    secrets_with_upper_keys = {k.upper(): v for k, v in secrets.items()}
+    for k, v in secrets_with_upper_keys.items():
         os.environ[k] = v
     yield
-    for k in secrets:
+    for k in secrets_with_upper_keys:
         os.environ.pop(k)
 
 

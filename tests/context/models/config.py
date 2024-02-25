@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from plib import Path
+from superpathlib import Path
 
 
 @dataclass

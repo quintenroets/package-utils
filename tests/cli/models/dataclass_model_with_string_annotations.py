@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Annotated
 
 import typer
-from plib import Path
+from superpathlib import Path
 
 from .dataclass_model import Action
 

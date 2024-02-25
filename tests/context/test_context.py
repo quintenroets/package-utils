@@ -8,7 +8,7 @@ from unittest.mock import patch
 import dacite
 import pytest
 from package_utils.context import Context as Context_
-from plib import Path
+from superpathlib import Path
 
 from tests.context.models.config import Config
 from tests.context.models.options import Options

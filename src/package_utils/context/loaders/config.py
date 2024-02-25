@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
 import dacite
-from plib import Path
+from superpathlib import Path
 
 from ..models import Config, Options
 from .options import Loader as OptionsLoader

@@ -7,8 +7,8 @@ from hypothesis import given, strategies
 from hypothesis.strategies import SearchStrategy
 from package_dev_utils.tests.args import cli_args, no_cli_args
 from package_utils.cli import instantiate_from_cli_args
-from plib import Path
 from pytest import CaptureFixture
+from superpathlib import Path
 
 from tests.cli.models import (
     class_model,

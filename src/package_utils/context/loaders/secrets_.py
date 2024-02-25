@@ -8,7 +8,7 @@ from typing import Generic
 
 import cli
 import dacite
-from plib import Path
+from superpathlib import Path
 
 from ..models import Config, Options, Secrets
 from . import options

@@ -4,7 +4,7 @@ from unittest.mock import patch
 from hypothesis import given, settings, strategies
 from hypothesis.strategies import SearchStrategy
 from package_utils.storage import CachedFileContent, cached_path_property
-from plib import Path
+from superpathlib import Path
 
 
 def dictionary_strategy() -> SearchStrategy[dict[str, str]]:

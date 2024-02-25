@@ -4,7 +4,7 @@ from typing import Optional
 
 import pytest
 from package_utils.cli.convertors.parameter import CliParameter
-from plib import Path
+from superpathlib import Path
 
 
 def extract_path_class(annotation: object) -> type[pathlib.Path] | None:

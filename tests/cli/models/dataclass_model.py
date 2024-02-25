@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Annotated
 
 import typer
-from plib import Path
+from superpathlib import Path
 
 
 class Action(Enum):

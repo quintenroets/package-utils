@@ -3,7 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
-from plib import Path
+from superpathlib import Path
 
 T = TypeVar("T")
 Self = TypeVar("Self", bound="CachedFileContent[Any]")

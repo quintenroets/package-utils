@@ -1,4 +1,4 @@
-from plib import Path
+from superpathlib import Path
 
 
 class Options:

@@ -1,7 +1,7 @@
 from typing import Annotated
 
 import typer
-from plib import Path
+from superpathlib import Path
 
 from tests.cli.models import dataclass_model
 from tests.cli.models.dataclass_model import Action

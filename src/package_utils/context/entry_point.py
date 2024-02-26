@@ -11,8 +11,9 @@ T = TypeVar("T")
 def create_entry_point(
     method: Callable[[], T],
     context: Context[Options, Config, Secrets],
-    context_creation_callback: Callable[[Context[Options, Config, Secrets]], None]
-    | None = None,
+    context_creation_callback: (
+        Callable[[Context[Options, Config, Secrets]], None] | None
+    ) = None,
 ) -> Callable[[], T]:
     def entry_point() -> T:
         if context.loaders.options.model is not None:

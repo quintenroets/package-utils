@@ -12,7 +12,7 @@ from tests.context.models.secrets_ import Secrets
 @no_cli_args
 def test_entry_point() -> None:
     context = Context(Options, Config, Secrets)
-    entry_point = create_entry_point(lambda: None, context)
+    entry_point = create_entry_point(lambda: None, context, lambda _: None)
     entry_point()
 
 

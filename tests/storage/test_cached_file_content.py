@@ -1,18 +1,23 @@
 import typing
+from collections.abc import Callable
+from typing import Any, TypeVar
 from unittest.mock import patch
 
+import pytest
 from hypothesis import given, settings, strategies
 from hypothesis.strategies import SearchStrategy
-from package_utils.storage import CachedFileContent, cached_path_property
+from package_utils import storage
+from package_utils.storage import CachedFileContent
 from superpathlib import Path
+
+T = TypeVar("T")
+
+load_patch_target = "package_utils.storage.cached_file_content.CachedFileContent.load"
 
 
 def dictionary_strategy() -> SearchStrategy[dict[str, str]]:
     text_strategy = strategies.text()
     return strategies.dictionaries(keys=text_strategy, values=text_strategy)
-
-
-load_patch_target = "package_utils.storage.cached_file_content.CachedFileContent.load"
 
 
 @given(content=dictionary_strategy())
@@ -58,26 +63,36 @@ def test_no_reload_after_set(content: dict[str, str]) -> None:
         load.assert_not_called()
 
 
+properties = (storage.cached_path_property, storage.cached_path_dict_property)
+
+
 @given(content=dictionary_strategy(), content2=dictionary_strategy())
 @settings(max_examples=10)
-def test_decorator(content: dict[str, str], content2: dict[str, str]) -> None:
+@pytest.mark.parametrize("cached_path_property", properties)
+def test_decorator(
+    cached_path_property: Callable[
+        ..., Callable[[Callable[[Any], T]], CachedFileContent[T]]
+    ],
+    content: T,
+    content2: T,
+) -> None:
     with Path.tempfile() as path:
 
         class TestModel:
             @property
             @cached_path_property(path)
-            def content(self) -> dict[str, str]:
+            def content(self) -> T:
                 result = path.yaml
-                return typing.cast(dict[str, str], result)
+                return typing.cast(T, result)
 
             @content.fget.setter  # noqa
-            def content(self, content_: dict[str, str]) -> None:
-                path.yaml = content_
+            def content(self, content_: T) -> None:
+                path.yaml = typing.cast(dict[str, str], content_)
 
         test_model = TestModel()
         test_model.content = content  # type: ignore
         assert test_model.content == content
-        path.yaml = content2
+        path.yaml = typing.cast(dict[str, str], content2)
         # tests are so quick to mtime needs to be increased manually
         path.mtime += 1
         assert test_model.content == content2

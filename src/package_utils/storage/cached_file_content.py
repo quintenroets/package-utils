@@ -69,10 +69,17 @@ class CachedFileContent(CachedFileContentRead[T]):
 def cached_path_property(
     path: Path, default: Any = None
 ) -> Callable[[Callable[[Any], T]], CachedFileContent[T]]:
-    if default is None:
-        default = {}
-
     def decorator(function: Callable[[Any], T]) -> CachedFileContent[T]:
+        return CachedFileContent(path, load_function=function, default=default)
+
+    return decorator
+
+
+def cached_path_dict_property(
+    path: Path,
+) -> Callable[[Callable[[Any], T]], CachedFileContent[T]]:
+    def decorator(function: Callable[[Any], T]) -> CachedFileContent[T]:
+        default = typing.cast(T, {})
         return CachedFileContent(path, load_function=function, default=default)
 
     return decorator

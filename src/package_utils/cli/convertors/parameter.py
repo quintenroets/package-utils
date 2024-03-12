@@ -47,16 +47,17 @@ class CliParameter:
         typer.main.param_path_convertor = convert
 
     def convert_optional_syntax(self) -> None:
-        annotations_generator = self.extract_annotations()
-        annotations = list(annotations_generator)
-        is_optional = any(annotation is types.NoneType for annotation in annotations)
-        if is_optional:
-            optional_annotation = next(
-                annotation
-                for annotation in annotations
-                if annotation is not types.NoneType
-            )
-            self.annotation = Optional[optional_annotation]  # noqa: UP007
+        annotations = self.extract_optional_annotations()
+        annotation = next(annotations, None)
+        if annotation is not None:
+            self.annotation = Optional[annotation]  # noqa: UP007
+
+    def extract_optional_annotations(self) -> Iterator[object]:
+        annotations = typing.get_args(self.annotation)
+        if types.NoneType in annotations:
+            for annotation in annotations:
+                if annotation != types.NoneType:
+                    yield annotation
 
     def extract_path_class(self) -> type[Path] | None:
         annotations = self.extract_annotations()
@@ -74,8 +75,7 @@ class CliParameter:
             if sub_annotations:
                 annotations.extend(sub_annotations)
             else:
-                typed_annotation = typing.cast(type, annotation)
-                yield typed_annotation
+                yield typing.cast(type, annotation)
 
     @property
     def is_argument(self) -> bool:

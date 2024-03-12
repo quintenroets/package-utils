@@ -48,10 +48,12 @@ def test_dataclass_defaults(class_: type[Options]) -> None:
 
 def verify_defaults(options: Options) -> None:
     assert options.action == Action.show
+    assert options.ignore_paths == []
     assert options.action_on_error == Action.show
     assert options.debug == Options.debug
     assert options.config_path == Options.config_path
     assert options.log_path == Options.log_path
+    assert options.messages == []
     assert options.n_retries == Options.n_retries
 
 
@@ -159,20 +161,43 @@ def test_type_conversion(class_: type[Options], n_retries: int) -> None:
 
 
 @class_argument
+@given(messages=strategies.lists(text_strategy()))
+def test_list_option(class_: type[Options], messages: list[str]) -> None:
+    args = [value for message in messages for value in ("--messages", message)]
+    with cli_args(*args):
+        options = instantiate_from_cli_args(class_)
+    assert options.messages == messages
+
+
+@class_argument
+@given(action=strategies.sampled_from(Action), paths=strategies.lists(text_strategy()))
+def test_list_argument(
+    class_: type[Options], action: Action, paths: tuple[str]
+) -> None:
+    with cli_args(action.value, *paths):
+        options = instantiate_from_cli_args(class_)
+    assert options.ignore_paths == [Path(path) for path in paths]
+
+
+@class_argument
 @given(
     action=strategies.sampled_from(Action),
+    paths=strategies.lists(text_strategy()),
     action_on_error=strategies.sampled_from(Action),
     debug=strategies.booleans(),
     message=text_strategy(),
+    messages=strategies.lists(text_strategy()),
     optional_message=text_strategy(),
     n_retries=strategies.integers(),
 )
 def test_combined_arguments(
     class_: type[Options],
     action: Action,
+    paths: list[str],
     action_on_error: Action,
     debug: bool,
     message: str,
+    messages: list[str],
     optional_message: str,
     n_retries: int,
 ) -> None:
@@ -187,14 +212,20 @@ def test_combined_arguments(
         "n-retries": n_retries,
     }
     option_arguments = generate_arguments(options_dict)
-    with cli_args(action.value, *option_arguments):
+
+    args = [action.value, *paths, *option_arguments]
+    for message_ in messages:
+        args.extend(("--messages", message_))
+    with cli_args(*args):
         options = instantiate_from_cli_args(class_)
     assert options.action == action
+    assert options.ignore_paths == [Path(path) for path in paths]
     assert options.action_on_error == action_on_error
     assert options.debug == debug
     assert options.config_path == options_dict["config-path"]
     assert options.log_path == options_dict["log-path"]
     assert options.message == message
+    assert options.messages == messages
     assert options.optional_message == optional_message
     assert options.n_retries == n_retries
 

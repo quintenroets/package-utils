@@ -115,7 +115,7 @@ def test_secrets_from_command(
     context: Context, environment_secrets: dict[str, str], secrets: NestedDict
 ) -> None:
     filled_secrets_path = filled_path({})
-    patched_command = patch("cli.get", new=lambda _, key: os.environ[key])
+    patched_command = patch("cli.capture_output", new=lambda _, key: os.environ[key])
     environment_with_secrets = secrets_in_environment(environment_secrets)
     with filled_secrets_path as secrets_path, environment_with_secrets, patched_command:
         context.config.secrets_path = secrets_path

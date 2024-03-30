@@ -1,6 +1,6 @@
 [project]
 name = "package-utils"
-version = "0.6.4"
+version = "0.6.5"
 description = "Common utilities for Python packages"
 authors = [{name = "Quinten Roets", email = "qdr2104@columbia.edu"}]
 license = {text = "MIT"}
@@ -13,6 +13,7 @@ dependencies = [
 [project.optional-dependencies]
 context = [
     "dacite >=1.8.1, <2",
+    "powercli >= 0.2.0, <1",
     "PyYaml >=6.0.1, <7",
     "superpathlib >=2.0.0, <3",
 ]

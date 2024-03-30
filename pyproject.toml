@@ -13,7 +13,7 @@ dependencies = [
 [project.optional-dependencies]
 context = [
     "dacite >=1.8.1, <2",
-    "powercli >= 0.1.1, <1",
+    "powercli >= 0.2.0, <1",
     "PyYaml >=6.0.1, <7",
     "superpathlib >=2.0.0, <3",
 ]

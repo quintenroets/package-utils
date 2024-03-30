@@ -35,7 +35,7 @@ def test_config() -> None:
 
 def test_secrets() -> None:
     context = Context[None, None, Secrets](Secrets=Secrets)
-    with patch("cli.get"):
+    with patch("cli.capture_output"):
         assert isinstance(context.secrets, Secrets)
     assert context.options is None
     assert context.config is None
@@ -45,7 +45,7 @@ def test_full_context() -> None:
     context = Context(Options=Options, Config=Config, Secrets=Secrets)
     assert isinstance(context.options, Options)
     assert isinstance(context.config, Config)
-    with patch("cli.get"):
+    with patch("cli.capture_output"):
         assert isinstance(context.secrets, Secrets)
 
 

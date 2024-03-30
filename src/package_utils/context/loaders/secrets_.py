@@ -29,8 +29,7 @@ class SecretLoader:
 
     def load(self) -> str:
         env_name = self.name.upper()
-        result = os.environ.get(env_name) or cli.get("pw", self.name)
-        return typing.cast(str, result)
+        return os.environ.get(env_name) or cli.capture_output("pw", self.name)
 
 
 @dataclass

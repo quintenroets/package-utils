@@ -6,32 +6,15 @@
 
 ## Usage
 
-```python
-from dataclasses import dataclass, field
-from pathlib import Path
-
-from package_utils.cli.entry_point import create_entry_point
-
-
-@dataclass
-class Options:
-    debug: bool = False
-    output_path: Path = field(default_factory=Path.cwd)
-
-
-def main(options: Options):
-    ...
-
-
-entry_point = create_entry_point(main)
-
-
-if __name__ == "__main__":
-    entry_point()
+Run
+```shell
+package_utils
 ```
-see examples in [tests](https://github.com/quintenroets/package-utils/tree/main/tests) and [python-package-template](https://github.com/quintenroets/python-package-template/blob/main/src/python_package_template/cli/entry_point.py)
-
 ## Installation
 ```shell
 pip install package-utils
+```
+or
+```shell
+pip install git+https://github.com/quintenroets/package-utils.git
 ```

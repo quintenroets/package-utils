@@ -22,8 +22,7 @@ class Convertor(class_.Convertor[T]):
             return self.object(*args, **specified_kwargs)
 
         wrapped_method.__doc__ = self.object.__doc__
-        wrapped_method = typing.cast(Callable[..., T], wrapped_method)
-        return wrapped_method
+        return typing.cast(Callable[..., T], wrapped_method)
 
     def extract_parameters_info(self) -> Iterator[CliParameter]:
         for field in fields(self.object):  # type: ignore

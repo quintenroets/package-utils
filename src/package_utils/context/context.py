@@ -1,3 +1,5 @@
+import os
+from functools import cached_property
 from typing import Generic
 
 from .loaders import Loaders
@@ -32,3 +34,9 @@ class Context(Generic[Options_, Config_, Secrets_]):
     @property
     def secrets(self) -> Secrets_:
         return self.loaders.secrets.value
+
+    @cached_property
+    def is_running_in_ci(self) -> bool:
+        return (
+            "GITHUB_ACTIONS" in os.environ and "PYTEST_CURRENT_TEST" not in os.environ
+        )

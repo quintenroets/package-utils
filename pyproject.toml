@@ -1,6 +1,6 @@
 [project]
 name = "package-utils"
-version = "0.6.5"
+version = "0.6.6"
 description = "Common utilities for Python packages"
 authors = [{name = "Quinten Roets", email = "qdr2104@columbia.edu"}]
 license = {text = "MIT"}

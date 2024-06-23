@@ -120,3 +120,7 @@ def test_secrets_from_command(
     with filled_secrets_path as secrets_path, environment_with_secrets, patched_command:
         context.config.secrets_path = secrets_path
         verify_secret_values(context, secrets)
+
+
+def test_is_running_in_ci(context: Context) -> None:
+    assert not context.is_running_in_ci

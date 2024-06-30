@@ -172,7 +172,9 @@ def test_list_option(class_: type[Options], messages: list[str]) -> None:
 @class_argument
 @given(action=strategies.sampled_from(Action), paths=strategies.lists(text_strategy()))
 def test_list_argument(
-    class_: type[Options], action: Action, paths: tuple[str]
+    class_: type[Options],
+    action: Action,
+    paths: tuple[str],
 ) -> None:
     with cli_args(action.value, *paths):
         options = instantiate_from_cli_args(class_)
@@ -231,7 +233,8 @@ def test_combined_arguments(
 
 
 def generate_arguments(
-    options: dict[str, int | Path | str | None], shuffle: bool = True
+    options: dict[str, int | Path | str | None],
+    shuffle: bool = True,
 ) -> Iterator[int | Path | str]:
     keys = list(options.keys())
     if shuffle:

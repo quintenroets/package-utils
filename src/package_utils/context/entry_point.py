@@ -18,7 +18,8 @@ def create_entry_point(
     def entry_point() -> T:
         if context.loaders.options.model is not None:
             context.options = instantiate_from_cli_args(
-                context.loaders.options.model, documented_object=method
+                context.loaders.options.model,
+                documented_object=method,
             )
             if context_creation_callback is not None:
                 context_creation_callback(context)

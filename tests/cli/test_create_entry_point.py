@@ -11,7 +11,8 @@ from tests.cli.models import dataclass_model
 
 
 def run_with_arguments(
-    debug: bool = False, message: str = dataclass_model.Options.message
+    debug: bool = False,
+    message: str = dataclass_model.Options.message,
 ) -> str | None:
     """
     Method with arguments.
@@ -34,7 +35,7 @@ class Options(dataclass_model.Options):
         return run(self)
 
 
-@pytest.fixture
+@pytest.fixture()
 def methods() -> tuple[Callable[..., str | None], ...]:
     return run_with_arguments, run, Options.run
 

@@ -71,7 +71,8 @@ properties = (storage.cached_path_property, storage.cached_path_dict_property)
 @pytest.mark.parametrize("cached_path_property", properties)
 def test_decorator(
     cached_path_property: Callable[
-        ..., Callable[[Callable[[Any], T]], CachedFileContent[T]]
+        ...,
+        Callable[[Callable[[Any], T]], CachedFileContent[T]],
     ],
     content: T,
     content2: T,
@@ -85,7 +86,7 @@ def test_decorator(
                 result = path.yaml
                 return typing.cast(T, result)
 
-            @content.fget.setter  # noqa
+            @content.fget.setter
             def content(self, content_: T) -> None:
                 path.yaml = typing.cast(dict[str, str], content_)
 

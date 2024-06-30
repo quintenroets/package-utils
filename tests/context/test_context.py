@@ -20,7 +20,7 @@ NestedDict = dict[str, str | dict[str, str]]
 Context = Context_[Options, Config, Secrets]
 
 
-@pytest.fixture
+@pytest.fixture()
 def context() -> Context:
     return Context(Options, Config, Secrets)
 
@@ -57,7 +57,7 @@ def test_non_existing_config_value_detected(context: Context) -> None:
         _ = context.config
 
 
-@pytest.fixture
+@pytest.fixture()
 def secrets() -> NestedDict:
     api_secrets = {"id": "id", "token": "api_token"}
     return {"token": "token", "api": api_secrets}
@@ -76,7 +76,7 @@ def verify_secret_values(context: Context, secrets: NestedDict) -> None:
     assert context.secrets.api.token == api_secrets["token"]
 
 
-@pytest.fixture
+@pytest.fixture()
 def environment_secrets() -> dict[str, str]:
     return {"token": "token", "api_id": "id", "api_token": "api_token"}
 
@@ -92,14 +92,17 @@ def secrets_in_environment(secrets: dict[str, str]) -> Iterator[None]:
 
 
 def test_secrets_from_environment(
-    context: Context, secrets: NestedDict, environment_secrets: dict[str, str]
+    context: Context,
+    secrets: NestedDict,
+    environment_secrets: dict[str, str],
 ) -> None:
     with secrets_in_environment(environment_secrets):
         verify_secret_values(context, secrets)
 
 
 def test_secrets_from_environment_and_file(
-    context: Context, secrets: NestedDict
+    context: Context,
+    secrets: NestedDict,
 ) -> None:
     token = secrets.pop("token")
     environment_secrets = {"token": typing.cast(str, token)}
@@ -112,7 +115,9 @@ def test_secrets_from_environment_and_file(
 
 
 def test_secrets_from_command(
-    context: Context, environment_secrets: dict[str, str], secrets: NestedDict
+    context: Context,
+    environment_secrets: dict[str, str],
+    secrets: NestedDict,
 ) -> None:
     filled_secrets_path = filled_path({})
     patched_command = patch("cli.capture_output", new=lambda _, key: os.environ[key])

@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import typer  # noqa: TCH002
-
-from tests.cli.models.dataclass_model import Action  # noqa: TCH001
-
-if TYPE_CHECKING:
-    from superpathlib import Path  # pragma: nocover
-
+from superpathlib import Path  # noqa: TCH002
 
 from tests.cli.models import dataclass_model
+from tests.cli.models.dataclass_model import Action  # noqa: TCH001
 
 
 class Options:

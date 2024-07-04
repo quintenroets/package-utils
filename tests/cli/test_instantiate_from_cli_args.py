@@ -7,7 +7,6 @@ from hypothesis import given, strategies
 from hypothesis.strategies import SearchStrategy
 from package_dev_utils.tests.args import cli_args, no_cli_args
 from package_utils.cli import instantiate_from_cli_args
-from pytest import CaptureFixture
 from superpathlib import Path
 
 from tests.cli.models import (
@@ -59,7 +58,7 @@ def verify_defaults(options: Options) -> None:
 
 @class_argument
 @given(debug=strategies.booleans())
-def test_debug_attribute(class_: type[Options], debug: bool) -> None:
+def test_debug_attribute(class_: type[Options], debug: bool) -> None:  # noqa: FBT001
     option_str = "--debug" if debug else "--no-debug"
     with cli_args(option_str):
         options = instantiate_from_cli_args(class_)
@@ -109,7 +108,7 @@ def test_verbosity_attribute_not_exposed(class_: type[Options], verbosity: int) 
 
 @class_argument
 @cli_args("--help")
-def test_help(class_: type[Options], capsys: CaptureFixture[str]) -> None:
+def test_help(class_: type[Options], capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exception:
         instantiate_from_cli_args(class_)
     assert exception.value.code == 0
@@ -172,7 +171,9 @@ def test_list_option(class_: type[Options], messages: list[str]) -> None:
 @class_argument
 @given(action=strategies.sampled_from(Action), paths=strategies.lists(text_strategy()))
 def test_list_argument(
-    class_: type[Options], action: Action, paths: tuple[str]
+    class_: type[Options],
+    action: Action,
+    paths: tuple[str],
 ) -> None:
     with cli_args(action.value, *paths):
         options = instantiate_from_cli_args(class_)
@@ -190,12 +191,12 @@ def test_list_argument(
     optional_message=text_strategy(),
     n_retries=strategies.integers(),
 )
-def test_combined_arguments(
+def test_combined_arguments(  # noqa: PLR0913
     class_: type[Options],
     action: Action,
     paths: list[str],
     action_on_error: Action,
-    debug: bool,
+    debug: bool,  # noqa: FBT001
     message: str,
     messages: list[str],
     optional_message: str,
@@ -231,7 +232,9 @@ def test_combined_arguments(
 
 
 def generate_arguments(
-    options: dict[str, int | Path | str | None], shuffle: bool = True
+    options: dict[str, int | Path | str | None],
+    *,
+    shuffle: bool = True,
 ) -> Iterator[int | Path | str]:
     keys = list(options.keys())
     if shuffle:

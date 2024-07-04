@@ -13,7 +13,7 @@ def extract_path_class(annotation: object) -> type[pathlib.Path] | None:
 
 
 @pytest.mark.parametrize(
-    "annotation,path_class",
+    ("annotation", "path_class"),
     [
         (Path, Path),
         (pathlib.Path, pathlib.Path),
@@ -24,4 +24,4 @@ def extract_path_class(annotation: object) -> type[pathlib.Path] | None:
     ],
 )
 def test_extract_path_class(annotation: object, path_class: type[pathlib.Path]) -> None:
-    assert extract_path_class(Path | None) == Path
+    assert extract_path_class(annotation) == path_class

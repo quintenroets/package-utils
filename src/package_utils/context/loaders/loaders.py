@@ -1,6 +1,7 @@
 from typing import Generic
 
-from ..models import Config, Models, Options, Secrets
+from package_utils.context.models import Config, Models, Options, Secrets
+
 from . import config, options, secrets_
 
 

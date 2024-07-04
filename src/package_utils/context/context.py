@@ -12,9 +12,9 @@ from .models import Secrets as Secrets_
 class Context(Generic[Options_, Config_, Secrets_]):
     def __init__(
         self,
-        Options: type[Options_] | None = None,
-        Config: type[Config_] | None = None,
-        Secrets: type[Secrets_] | None = None,
+        Options: type[Options_] | None = None,  # noqa: N803
+        Config: type[Config_] | None = None,  # noqa: N803
+        Secrets: type[Secrets_] | None = None,  # noqa: N803
     ) -> None:
         models = Models[Options_, Config_, Secrets_](Options, Config, Secrets)
         self.loaders = Loaders(models)

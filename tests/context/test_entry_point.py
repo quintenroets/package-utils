@@ -17,7 +17,7 @@ def test_entry_point() -> None:
 
 
 @given(debug=strategies.booleans())
-def test_specified_options(debug: bool) -> None:
+def test_specified_options(*, debug: bool) -> None:
     def verify_options() -> None:
         assert context.options.config_path == config_path
         assert context.options.debug == debug

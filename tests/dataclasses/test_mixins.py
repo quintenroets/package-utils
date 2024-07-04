@@ -18,7 +18,7 @@ class Model(SerializationMixin):
     debug=strategies.booleans(),
     verbosity=strategies.integers(),
 )
-def test_content_preserved(message: str, debug: bool, verbosity: int) -> None:
+def test_content_preserved(*, message: str, debug: bool, verbosity: int) -> None:
     info = {"message": message, "debug": debug, "verbosity": verbosity}
     model = Model.from_dict(info)
     assert model.dict() == info

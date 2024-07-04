@@ -51,7 +51,7 @@ def test_full_context() -> None:
 
 def test_normal_class_options() -> None:
     context = Context[options_normal_class.Options, None, None](
-        Options=options_normal_class.Options
+        Options=options_normal_class.Options,
     )
     assert isinstance(context.options, options_normal_class.Options)
     assert context.config is None

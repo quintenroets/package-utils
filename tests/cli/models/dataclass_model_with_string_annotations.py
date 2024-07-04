@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Annotated
 
-import typer
+import typer  # noqa: TCH002
 from superpathlib import Path
 
 from .dataclass_model import Action

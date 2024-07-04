@@ -25,11 +25,11 @@ class Convertor(class_.Convertor[T]):
         return typing.cast(Callable[..., T], wrapped_method)
 
     def extract_parameters_info(self) -> Iterator[CliParameter]:
-        for field in fields(self.object):  # type: ignore
+        for field in fields(self.object):  # type: ignore[arg-type]
             if field.init:
                 yield self.create_cli_parameter(field)
 
-    def create_cli_parameter(self, field: Field) -> CliParameter:  # type: ignore
+    def create_cli_parameter(self, field: Field[Any]) -> CliParameter:
         no_default = field.default is MISSING
         default = None if no_default else field.default
         parameter = inspect.Parameter(

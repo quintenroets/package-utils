@@ -10,12 +10,14 @@ import cli
 import dacite
 from superpathlib import Path
 
-from ..models import Config, Options, Secrets
+from package_utils.context.models import Config, Options, Secrets
+
 from . import options
-from .config import Loader as ConfigLoader
 
 if typing.TYPE_CHECKING:
     from _typeshed import DataclassInstance  # pragma: nocover
+
+    from .config import Loader as ConfigLoader  # pragma: nocover
 
 
 from typing import TypeVar

@@ -35,8 +35,8 @@ class CliParameter:
         if path_class is not None:
             self.monkey_patch_path_convertor(path_class)
         self.convert_optional_syntax()
-        OptionInfo = typer.Argument if self.is_argument else typer.Option
-        option_info = OptionInfo(path_type=path_class)  # type: ignore
+        OptionInfo = typer.Argument if self.is_argument else typer.Option  # noqa: N806
+        option_info = OptionInfo(path_type=path_class)  # type: ignore[operator]
         return Annotated[self.annotation, option_info]
 
     @classmethod
@@ -63,7 +63,7 @@ class CliParameter:
         annotations = self.extract_annotations()
         path_annotation = None
         for sub_annotation in annotations:
-            if issubclass(sub_annotation, Path):
+            if sub_annotation is not None and issubclass(sub_annotation, Path):
                 path_annotation = sub_annotation
         return path_annotation
 

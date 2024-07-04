@@ -7,7 +7,8 @@ from typing import Any, Generic, TypeVar
 import dacite
 from superpathlib import Path
 
-from ..models import Config, Options
+from package_utils.context.models import Config, Options
+
 from .options import Loader as OptionsLoader
 
 if typing.TYPE_CHECKING:

@@ -1,17 +1,21 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import pytest
 from package_dev_utils.tests.args import cli_args, no_cli_args
 from package_utils.cli import create_entry_point
-from pytest import CaptureFixture
+
+if TYPE_CHECKING:
+    from collections.abc import Callable  # pragma: nocover
 
 from tests.cli.models import dataclass_model
 
 
 def run_with_arguments(
-    debug: bool = False, message: str = dataclass_model.Options.message
+    *,
+    debug: bool = False,
+    message: str = dataclass_model.Options.message,
 ) -> str | None:
     """
     Method with arguments.
@@ -23,7 +27,7 @@ def run(options: Options) -> str | None:
     """
     Normal method.
     """
-    return run_with_arguments(options.debug, options.message)
+    return run_with_arguments(debug=options.debug, message=options.message)
 
 
 class Options(dataclass_model.Options):
@@ -34,7 +38,7 @@ class Options(dataclass_model.Options):
         return run(self)
 
 
-@pytest.fixture
+@pytest.fixture()
 def methods() -> tuple[Callable[..., str | None], ...]:
     return run_with_arguments, run, Options.run
 
@@ -47,7 +51,7 @@ def test_entry_point(methods: tuple[Callable[..., str | None], ...]) -> None:
 
 
 @no_cli_args
-def test_with_class_specified(methods: tuple[Callable[..., str | None], ...]) -> None:
+def test_with_class_specified() -> None:
     entry_point = create_entry_point(Options.run, Options)
     entry_point()
 
@@ -68,7 +72,7 @@ def test_option(methods: tuple[Callable[..., str | None], ...]) -> None:
 @cli_args("--help")
 def test_docstring(
     methods: tuple[Callable[..., str | None], ...],
-    capsys: CaptureFixture[str],
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     for method in methods:
         entry_point = create_entry_point(method)

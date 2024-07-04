@@ -15,7 +15,9 @@ T = TypeVar("T")
 class SerializationMixin:
     @classmethod
     def from_dict(
-        cls: type[T], items: dict[str, Any], config: dacite.Config | None = None
+        cls: type[T],
+        items: dict[str, Any],
+        config: dacite.Config | None = None,
     ) -> T:
         if config is None:
             config = dacite.Config(strict=True)

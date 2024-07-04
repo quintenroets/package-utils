@@ -12,7 +12,7 @@ Self = TypeVar("Self", bound="CachedFileContent[Any]")
 @dataclass
 class CachedFileContentRead(Generic[T]):
     path: Path
-    default: T = field(default_factory=dict)  # type: ignore
+    default: T = field(default_factory=dict)  # type: ignore[assignment]
     mtime: float | None = None
     content: T | None = None
     load_function: Callable[[Any], T] | None = None
@@ -67,7 +67,8 @@ class CachedFileContent(CachedFileContentRead[T]):
 
 
 def cached_path_property(
-    path: Path, default: Any = None
+    path: Path,
+    default: Any = None,
 ) -> Callable[[Callable[[Any], T]], CachedFileContent[T]]:
     def decorator(function: Callable[[Any], T]) -> CachedFileContent[T]:
         return CachedFileContent(path, load_function=function, default=default)

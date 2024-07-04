@@ -2,10 +2,9 @@ import dataclasses
 import inspect
 import sys
 import types
-import typing
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, cast
 
 import typer
 
@@ -31,10 +30,7 @@ class Runner(Generic[T]):
             convertor_module = convertors.dataclass
         else:
             is_class = inspect.isclass(self.object)
-            if is_class:
-                convertor_module = convertors.class_
-            else:
-                convertor_module = convertors.method
+            convertor_module = convertors.class_ if is_class else convertors.method
         return convertor_module
 
     @classmethod
@@ -49,5 +45,4 @@ class Runner(Generic[T]):
         result_or_exit_code = app(standalone_mode=False)
         if isinstance(result_or_exit_code, int):
             sys.exit(result_or_exit_code)
-        result = typing.cast(T, result_or_exit_code)
-        return result
+        return cast(T, result_or_exit_code)

@@ -24,7 +24,7 @@ class Convertor(Generic[T]):
 
     def run(self) -> Method[T]:
         method = self.create_cli_entry_method()
-        method.__signature__ = self.create_signature_for_cli_entry()  # type: ignore
+        method.__signature__ = self.create_signature_for_cli_entry()  # type: ignore[attr-defined]
         return method
 
     def create_cli_entry_method(self) -> Method[T]:

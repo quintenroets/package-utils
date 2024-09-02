@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from package_dev_utils.tests.args import cli_args, no_cli_args
+
 from package_utils.cli import create_entry_point
 
 if TYPE_CHECKING:
@@ -38,7 +39,7 @@ class Options(dataclass_model.Options):
         return run(self)
 
 
-@pytest.fixture()
+@pytest.fixture
 def methods() -> tuple[Callable[..., str | None], ...]:
     return run_with_arguments, run, Options.run
 

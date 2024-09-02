@@ -7,9 +7,9 @@ from unittest.mock import patch
 
 import dacite
 import pytest
-from package_utils.context import Context as Context_
 from superpathlib import Path
 
+from package_utils.context import Context as Context_
 from tests.context.models.config import Config
 from tests.context.models.options import Options
 from tests.context.models.secrets_ import Secrets
@@ -20,7 +20,7 @@ NestedDict = dict[str, str | dict[str, str]]
 Context = Context_[Options, Config, Secrets]
 
 
-@pytest.fixture()
+@pytest.fixture
 def context() -> Context:
     return Context(Options, Config, Secrets)
 
@@ -57,7 +57,7 @@ def test_non_existing_config_value_detected(context: Context) -> None:
         _ = context.config
 
 
-@pytest.fixture()
+@pytest.fixture
 def secrets() -> NestedDict:
     api_secrets = {"id": "id", "token": "api_token"}
     return {"token": "token", "api": api_secrets}
@@ -76,7 +76,7 @@ def verify_secret_values(context: Context, secrets: NestedDict) -> None:
     assert context.secrets.api.token == api_secrets["token"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def environment_secrets() -> dict[str, str]:
     return {"token": "token", "api_id": "id", "api_token": "api_token"}
 

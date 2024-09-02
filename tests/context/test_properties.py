@@ -1,8 +1,8 @@
 from unittest.mock import patch
 
 from package_dev_utils.tests.args import no_cli_args
-from package_utils.context import Context as Context_
 
+from package_utils.context import Context as Context_
 from tests.context.models.config import Config
 from tests.context.models.options import Options
 from tests.context.models.secrets_ import Secrets

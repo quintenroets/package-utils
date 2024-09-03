@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import dacite
 import pytest
 from hypothesis import given, strategies
+
 from package_utils.dataclasses import SerializationMixin
 
 

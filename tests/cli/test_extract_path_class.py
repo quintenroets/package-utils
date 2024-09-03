@@ -3,8 +3,9 @@ import pathlib
 from typing import Optional
 
 import pytest
-from package_utils.cli.convertors.parameter import CliParameter
 from superpathlib import Path
+
+from package_utils.cli.convertors.parameter import CliParameter
 
 
 def extract_path_class(annotation: object) -> type[pathlib.Path] | None:

@@ -1,9 +1,9 @@
 from hypothesis import given, strategies
 from package_dev_utils.tests.args import cli_args, no_cli_args
-from package_utils.context import Context
-from package_utils.context.entry_point import create_entry_point
 from superpathlib import Path
 
+from package_utils.context import Context
+from package_utils.context.entry_point import create_entry_point
 from tests.context.models.config import Config
 from tests.context.models.options import Options
 from tests.context.models.secrets_ import Secrets

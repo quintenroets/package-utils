@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 from package_utils.context import Context
-
 from tests.context.models import options_normal_class
 from tests.context.models.config import Config
 from tests.context.models.options import Options

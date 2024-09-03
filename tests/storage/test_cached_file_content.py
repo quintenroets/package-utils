@@ -6,9 +6,10 @@ from unittest.mock import patch
 import pytest
 from hypothesis import given, settings, strategies
 from hypothesis.strategies import SearchStrategy
+from superpathlib import Path
+
 from package_utils import storage
 from package_utils.storage import CachedFileContent
-from superpathlib import Path
 
 T = TypeVar("T")
 

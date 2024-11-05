@@ -36,7 +36,7 @@ class CliParameter:
             self.monkey_patch_path_convertor(path_class)
         self.convert_optional_syntax()
         OptionInfo = typer.Argument if self.is_argument else typer.Option  # noqa: N806
-        option_info = OptionInfo(path_type=path_class)  # type: ignore[operator]
+        option_info = OptionInfo(path_type=path_class)  # type: ignore[arg-type]
         return Annotated[self.annotation, option_info]
 
     @classmethod

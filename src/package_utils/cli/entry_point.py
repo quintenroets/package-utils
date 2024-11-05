@@ -1,7 +1,11 @@
 import typing
 from collections.abc import Callable
 from dataclasses import dataclass, is_dataclass
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+
+if TYPE_CHECKING:  # pragma: nocover
+    from _typeshed import DataclassInstance
+
 
 from .cli_runner import Runner
 
@@ -37,4 +41,4 @@ class EntryPoint(Generic[T]):
         if type_hint_values:
             type_hint = next(iter(type_hint_values))
             if is_dataclass(type_hint):
-                self.argument_class = type_hint
+                self.argument_class = cast(type["DataclassInstance"], type_hint)

@@ -4,7 +4,7 @@ import dataclasses
 import os
 import typing
 from dataclasses import dataclass, fields, is_dataclass
-from typing import Generic
+from typing import Generic, cast
 
 import cli
 import dacite
@@ -14,10 +14,10 @@ from package_utils.context.models import Config, Options, Secrets
 
 from . import options
 
-if typing.TYPE_CHECKING:
-    from _typeshed import DataclassInstance  # pragma: nocover
+if typing.TYPE_CHECKING:  # pragma: nocover
+    from _typeshed import DataclassInstance
 
-    from .config import Loader as ConfigLoader  # pragma: nocover
+    from .config import Loader as ConfigLoader
 
 
 from typing import TypeVar
@@ -70,6 +70,7 @@ class Loader(options.Loader[Secrets], Generic[Options, Config, Secrets]):
             if field.default_factory == dataclasses.MISSING:
                 if is_dataclass(field.type):
                     self.add_defaults(field.type, full_name)
-                    field.default_factory = DataclassLoader(field.type).load
+                    type_ = cast(type["DataclassInstance"], field.type)
+                    field.default_factory = DataclassLoader(type_).load
                 else:
                     field.default_factory = SecretLoader(full_name).load

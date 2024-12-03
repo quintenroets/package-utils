@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Annotated
 
-import typer  # noqa: TCH002
-from superpathlib import Path  # noqa: TCH002
+import typer
+from superpathlib import Path  # noqa: TC002
 
 from tests.cli.models import dataclass_model
-from tests.cli.models.dataclass_model import Action  # noqa: TCH001
+from tests.cli.models.dataclass_model import Action  # noqa: TC001
 
 
 class Options:

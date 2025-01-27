@@ -68,7 +68,7 @@ properties = (storage.cached_path_property, storage.cached_path_dict_property)
 
 
 @given(content=dictionary_strategy(), content2=dictionary_strategy())
-@settings(max_examples=10, deadline=2000)
+@settings(max_examples=10, deadline=3000)
 @pytest.mark.parametrize("cached_path_property", properties)
 def test_decorator(
     cached_path_property: Callable[

@@ -17,7 +17,7 @@ class Convertor(method.Convertor[T]):
         return self.object.__init__  # type: ignore[return-value]
 
     def extract_parameters_info(self) -> Iterator[CliParameter]:
-        for parameter in self.signature.parameters.values():
+        for parameter in self.method_parameters:
             if parameter.name != "self":
                 annotation = self.annotations[parameter.name]
                 yield CliParameter(parameter, annotation)

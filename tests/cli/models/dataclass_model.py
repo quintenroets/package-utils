@@ -6,6 +6,11 @@ import typer
 from superpathlib import Path
 
 
+@dataclass
+class NestedOptions:
+    use_nesting: bool = False
+
+
 class Action(Enum):
     show = "show"
     do_nothing = "do_nothing"
@@ -29,6 +34,7 @@ class Options:
     optional_message: str | None = "Hello World!"
     working_directory: Path = field(default_factory=Path.cwd)
     n_retries: int = 0
+    nested_options: NestedOptions | None = None
 
     def __post_init__(self) -> None:
         self.verbosity = 0

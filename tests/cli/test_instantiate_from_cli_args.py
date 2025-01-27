@@ -180,6 +180,17 @@ def test_list_argument(
     assert options.ignore_paths == [Path(path) for path in paths]
 
 
+@dataclass_argument
+@given(use_nesting=strategies.booleans())
+def test_nested_options(class_: type[Options], *, use_nesting: bool) -> None:
+    option_name = "nested-options-use-nesting"
+    option_string = f"--{option_name}" if use_nesting else f"--no-{option_name}"
+    with cli_args(option_string):
+        options = instantiate_from_cli_args(class_)
+    assert options.nested_options is not None
+    assert options.nested_options.use_nesting == use_nesting
+
+
 @class_argument
 @given(
     action=strategies.sampled_from(Action),

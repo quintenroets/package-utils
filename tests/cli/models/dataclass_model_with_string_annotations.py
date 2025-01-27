@@ -6,7 +6,7 @@ from typing import Annotated
 import typer
 from superpathlib import Path
 
-from .dataclass_model import Action
+from .dataclass_model import Action, NestedOptions
 
 
 @dataclass
@@ -27,6 +27,7 @@ class Options:
     optional_message: str | None = "Hello World!"
     working_directory: Path = field(default_factory=Path.cwd)
     n_retries: int = 0
+    nested_options: NestedOptions | None = None
 
     def __post_init__(self) -> None:
         self.verbosity = 0

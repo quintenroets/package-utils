@@ -6,8 +6,6 @@ from collections.abc import Callable, Iterator
 from dataclasses import MISSING, Field, dataclass, field, fields
 from typing import TYPE_CHECKING, Any, TypeVar
 
-import dacite
-
 from . import class_
 from .parameter import CliParameter
 
@@ -28,9 +26,15 @@ class Convertor(class_.Convertor[T]):
         @functools.wraps(self.annotated_method)
         def wrapped_method(**kwargs: Any) -> Any:
             specified_kwargs = {k: v for k, v in kwargs.items() if v is not None}
-            self.unflatten(specified_kwargs)
-            config = dacite.Config(strict=True)
-            return dacite.from_dict(self.object, specified_kwargs, config=config)
+            if self.flattened_arguments_mapper:
+                import dacite
+
+                self.unflatten(specified_kwargs)
+                config = dacite.Config(strict=True)
+                result = dacite.from_dict(self.object, specified_kwargs, config=config)
+            else:
+                result = self.object(**specified_kwargs)
+            return result
 
         wrapped_method.__doc__ = self.object.__doc__
         return typing.cast(Callable[..., T], wrapped_method)

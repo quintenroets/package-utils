@@ -4,11 +4,10 @@ import dataclasses
 import os
 import typing
 from dataclasses import dataclass, fields, is_dataclass
-from typing import Generic, cast
+from typing import Generic, TypeVar, cast
 
 import cli
 import dacite
-from superpathlib import Path
 
 from package_utils.context.models import Config, Options, Secrets
 
@@ -16,11 +15,10 @@ from . import options
 
 if typing.TYPE_CHECKING:  # pragma: nocover
     from _typeshed import DataclassInstance
+    from superpathlib import Path
 
     from .config import Loader as ConfigLoader
 
-
-from typing import TypeVar
 
 T = TypeVar("T", bound="DataclassInstance")
 

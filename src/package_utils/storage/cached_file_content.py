@@ -4,9 +4,9 @@ from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
 from superpathlib import Path
+from typing_extensions import Self
 
 T = TypeVar("T")
-Self = TypeVar("Self", bound="CachedFileContent[Any]")
 
 
 @dataclass
@@ -61,7 +61,7 @@ class CachedFileContent(CachedFileContentRead[T]):
     def save(self, content: T) -> None:
         self.path.yaml = typing.cast("dict[str, str]", content)
 
-    def setter(self: Self, function: Callable[[Any, T], None]) -> Self:
+    def setter(self, function: Callable[[Any, T], None]) -> Self:
         self.save_function = function
         return self
 

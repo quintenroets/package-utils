@@ -41,4 +41,4 @@ class EntryPoint(Generic[T]):
         if type_hint_values:
             type_hint = next(iter(type_hint_values))
             if is_dataclass(type_hint):
-                self.argument_class = cast(type["DataclassInstance"], type_hint)
+                self.argument_class = cast("type[DataclassInstance]", type_hint)

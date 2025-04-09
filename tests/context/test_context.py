@@ -70,7 +70,7 @@ def test_secrets_from_file(context: Context, secrets: NestedDict) -> None:
 
 
 def verify_secret_values(context: Context, secrets: NestedDict) -> None:
-    api_secrets = typing.cast(dict[str, str], secrets["api"])
+    api_secrets = typing.cast("dict[str, str]", secrets["api"])
     assert context.secrets.token == secrets["token"]
     assert context.secrets.api.id == api_secrets["id"]
     assert context.secrets.api.token == api_secrets["token"]
@@ -105,7 +105,7 @@ def test_secrets_from_environment_and_file(
     secrets: NestedDict,
 ) -> None:
     token = secrets.pop("token")
-    environment_secrets = {"token": typing.cast(str, token)}
+    environment_secrets = {"token": typing.cast("str", token)}
     filled_secrets_path = filled_path(secrets)
     environment_with_secrets = secrets_in_environment(environment_secrets)
     with filled_secrets_path as secrets_path, environment_with_secrets:

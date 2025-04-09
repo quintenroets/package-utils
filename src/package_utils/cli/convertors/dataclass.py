@@ -37,7 +37,7 @@ class Convertor(class_.Convertor[T]):
             return result
 
         wrapped_method.__doc__ = self.object.__doc__
-        return typing.cast(Callable[..., T], wrapped_method)
+        return typing.cast("Callable[..., T]", wrapped_method)
 
     def unflatten(self, items: dict[str, Any]) -> None:
         while self.flattened_arguments_mapper:

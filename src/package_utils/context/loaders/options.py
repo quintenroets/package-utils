@@ -17,14 +17,14 @@ class Loader(Generic[Model]):
 
     @property
     def typed_model(self) -> type[DataclassInstance]:
-        return typing.cast(type["DataclassInstance"], self.model)
+        return typing.cast("type[DataclassInstance]", self.model)
 
     @property
     def value(self) -> Model:
         if self._value is None and self.model is not None:
             value = self.load()
-            self.value = typing.cast(Model, value)
-        return typing.cast(Model, self._value)
+            self.value = typing.cast("Model", value)
+        return typing.cast("Model", self._value)
 
     @value.setter
     def value(self, value: Model | None) -> None:

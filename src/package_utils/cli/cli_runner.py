@@ -45,4 +45,4 @@ class Runner(Generic[T]):
         result_or_exit_code = app(standalone_mode=False)
         if isinstance(result_or_exit_code, int):
             sys.exit(result_or_exit_code)
-        return cast(T, result_or_exit_code)
+        return cast("T", result_or_exit_code)

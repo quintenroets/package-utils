@@ -85,16 +85,16 @@ def test_decorator(
             @cached_path_property(path)
             def content(self) -> T:
                 result = path.yaml
-                return typing.cast(T, result)
+                return typing.cast("T", result)
 
             @content.fget.setter
             def content(self, content_: T) -> None:
-                path.yaml = typing.cast(dict[str, str], content_)
+                path.yaml = typing.cast("dict[str, str]", content_)
 
         test_model = TestModel()
         test_model.content = content  # type: ignore[method-assign]
         assert test_model.content == content
-        path.yaml = typing.cast(dict[str, str], content2)
+        path.yaml = typing.cast("dict[str, str]", content2)
         # tests are so quick to mtime needs to be increased manually
         path.mtime += 1
         assert test_model.content == content2

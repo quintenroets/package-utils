@@ -24,7 +24,7 @@ class Loader(OptionsLoader[Config], Generic[Options, Config]):
     def load(self) -> DataclassInstance:
         options = None if self.options_loader is None else self.options_loader.value
         optional_path = options and getattr(options, "config_path", None)
-        path = typing.cast(Path | None, optional_path)
+        path = typing.cast("Path | None", optional_path)
         return (
             self.typed_model()
             if path is None
@@ -34,5 +34,5 @@ class Loader(OptionsLoader[Config], Generic[Options, Config]):
     @classmethod
     def load_from_file(cls, class_type: type[T], path: Path) -> T:
         config = dacite.Config(type_hooks={Path: Path}, strict=True)
-        info = typing.cast(dict[str, Any], path.yaml)
+        info = typing.cast("dict[str, Any]", path.yaml)
         return dacite.from_dict(class_type, info, config=config)

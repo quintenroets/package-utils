@@ -75,7 +75,7 @@ class CliParameter:
             if sub_annotations:
                 annotations.extend(sub_annotations)
             else:
-                yield typing.cast(type, annotation)
+                yield typing.cast("type", annotation)
 
     @property
     def is_argument(self) -> bool:

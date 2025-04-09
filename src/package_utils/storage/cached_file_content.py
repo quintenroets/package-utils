@@ -40,7 +40,7 @@ class CachedFileContentRead(Generic[T]):
 
     def load(self) -> T:
         content = self.path.yaml
-        return typing.cast(T, content)
+        return typing.cast("T", content)
 
 
 @dataclass
@@ -59,7 +59,7 @@ class CachedFileContent(CachedFileContentRead[T]):
         self.mtime = self.path.mtime
 
     def save(self, content: T) -> None:
-        self.path.yaml = typing.cast(dict[str, str], content)
+        self.path.yaml = typing.cast("dict[str, str]", content)
 
     def setter(self: Self, function: Callable[[Any, T], None]) -> Self:
         self.save_function = function
@@ -80,7 +80,7 @@ def cached_path_dict_property(
     path: Path,
 ) -> Callable[[Callable[[Any], T]], CachedFileContent[T]]:
     def decorator(function: Callable[[Any], T]) -> CachedFileContent[T]:
-        default = typing.cast(T, {})
+        default = typing.cast("T", {})
         return CachedFileContent(path, load_function=function, default=default)
 
     return decorator

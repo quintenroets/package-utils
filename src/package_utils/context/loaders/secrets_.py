@@ -55,9 +55,9 @@ class Loader(options.Loader[Secrets], Generic[Options, Config, Secrets]):
     def load_file_secrets(self) -> dict[str, str]:
         config = None if self.config_loader is None else self.config_loader.value
         path = config and getattr(config, "secrets_path", None)
-        path = typing.cast(Path, path)
+        path = typing.cast("Path", path)
         result = {} if path is None else path.yaml
-        return typing.cast(dict[str, str], result)
+        return typing.cast("dict[str, str]", result)
 
     def add_defaults(
         self,
@@ -70,7 +70,7 @@ class Loader(options.Loader[Secrets], Generic[Options, Config, Secrets]):
             if field.default_factory == dataclasses.MISSING:
                 if is_dataclass(field.type):
                     self.add_defaults(field.type, full_name)
-                    type_ = cast(type["DataclassInstance"], field.type)
+                    type_ = cast("type[DataclassInstance]", field.type)
                     field.default_factory = DataclassLoader(type_).load
                 else:
                     field.default_factory = SecretLoader(full_name).load

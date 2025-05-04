@@ -24,17 +24,13 @@ storage = [
     "superpathlib >= 2.0.0, <3",
 ]
 dev = [
-<<<<<<< HEAD
     # context
     "dacite >=1.8.1, <2",
     "PyYaml >=6.0.1, <7",
     "superpathlib >=2.0.0, <3",
 
     "hypothesis >=6.91.0, <7",
-    "package-dev-tools >=0.5.11, <1",
-=======
     "package-dev-tools >=0.7.0, <1",
->>>>>>> template
     "package-dev-utils >=0.1.6, <1",
 ]
 

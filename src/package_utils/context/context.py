@@ -2,17 +2,11 @@ import os
 from functools import cached_property
 from typing import Generic
 
-<<<<<<< HEAD
 from .loaders import Loaders
 from .models import Config as Config_
 from .models import Models
 from .models import Options as Options_
 from .models import Secrets as Secrets_
-=======
-from .config import Config
-from .options import Options
-from .secrets_ import Secrets
->>>>>>> template
 
 
 class Context(Generic[Options_, Config_, Secrets_]):

@@ -11,9 +11,24 @@ class NestedOptions:
     use_nesting: bool = False
 
 
+@dataclass(frozen=True)
+class NestedOptionsWithoutDefaults:
+    use_nesting: bool
+
+
+@dataclass
+class OptionalNestedOptionsWithoutDefaults:
+    use_nesting: bool
+
+
 class Action(Enum):
     show = "show"
     do_nothing = "do_nothing"
+
+
+default_nested_options_without_defaults = NestedOptionsWithoutDefaults(
+    use_nesting=False,
+)
 
 
 @dataclass
@@ -35,6 +50,12 @@ class Options:
     working_directory: Path = field(default_factory=Path.cwd)
     n_retries: int = 0
     nested_options: NestedOptions | None = None
+    nested_options_without_defaults: NestedOptionsWithoutDefaults = (
+        default_nested_options_without_defaults
+    )
+    optional_nested_options_without_defaults: (
+        OptionalNestedOptionsWithoutDefaults | None
+    ) = None
 
     def __post_init__(self) -> None:
         self.verbosity = 0

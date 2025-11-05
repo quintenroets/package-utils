@@ -16,11 +16,6 @@ class NestedOptionsWithoutDefaults:
     use_nesting: bool
 
 
-@dataclass
-class OptionalNestedOptionsWithoutDefaults:
-    use_nesting: bool
-
-
 class Action(Enum):
     show = "show"
     do_nothing = "do_nothing"
@@ -53,9 +48,7 @@ class Options:
     nested_options_without_defaults: NestedOptionsWithoutDefaults = (
         default_nested_options_without_defaults
     )
-    optional_nested_options_without_defaults: (
-        OptionalNestedOptionsWithoutDefaults | None
-    ) = None
+    optional_nested_options_without_defaults: NestedOptionsWithoutDefaults | None = None
 
     def __post_init__(self) -> None:
         self.verbosity = 0

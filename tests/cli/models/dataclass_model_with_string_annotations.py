@@ -10,7 +10,6 @@ from .dataclass_model import (
     Action,
     NestedOptions,
     NestedOptionsWithoutDefaults,
-    OptionalNestedOptionsWithoutDefaults,
     default_nested_options_without_defaults,
 )
 
@@ -37,9 +36,7 @@ class Options:
     nested_options_without_defaults: NestedOptionsWithoutDefaults = (
         default_nested_options_without_defaults
     )
-    optional_nested_options_without_defaults: (
-        OptionalNestedOptionsWithoutDefaults | None
-    ) = None
+    optional_nested_options_without_defaults: NestedOptionsWithoutDefaults | None = None
 
     def __post_init__(self) -> None:
         self.verbosity = 0

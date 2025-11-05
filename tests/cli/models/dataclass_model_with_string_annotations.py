@@ -6,7 +6,12 @@ from typing import Annotated
 import typer
 from superpathlib import Path
 
-from .dataclass_model import Action, NestedOptions
+from .dataclass_model import (
+    Action,
+    NestedOptions,
+    NestedOptionsWithoutDefaults,
+    default_nested_options,
+)
 
 
 @dataclass
@@ -28,6 +33,10 @@ class Options:
     working_directory: Path = field(default_factory=Path.cwd)
     n_retries: int = 0
     nested_options: NestedOptions | None = None
+    nested_options_without_defaults: NestedOptionsWithoutDefaults = (
+        default_nested_options
+    )
+    optional_nested_options_without_defaults: NestedOptionsWithoutDefaults | None = None
 
     def __post_init__(self) -> None:
         self.verbosity = 0

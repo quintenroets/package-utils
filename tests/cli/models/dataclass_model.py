@@ -21,7 +21,7 @@ class Action(Enum):
     do_nothing = "do_nothing"
 
 
-default_nested_options_without_defaults = NestedOptionsWithoutDefaults(
+default_nested_options = NestedOptionsWithoutDefaults(
     use_nesting=False,
 )
 
@@ -46,7 +46,7 @@ class Options:
     n_retries: int = 0
     nested_options: NestedOptions | None = None
     nested_options_without_defaults: NestedOptionsWithoutDefaults = (
-        default_nested_options_without_defaults
+        default_nested_options
     )
     optional_nested_options_without_defaults: NestedOptionsWithoutDefaults | None = None
 

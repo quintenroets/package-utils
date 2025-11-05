@@ -40,16 +40,15 @@ class Convertor(class_.Convertor[T]):
         return typing.cast("Callable[..., T]", wrapped_method)
 
     def unflatten(self, items: dict[str, Any]) -> None:
-        while self.flattened_arguments_mapper:
-            names_to_unflatten = {
-                name for name in items if name in self.flattened_arguments_mapper
-            }
+        names_to_unflatten = items.keys() & self.flattened_arguments_mapper.keys()
+        while self.flattened_arguments_mapper and names_to_unflatten:
             for name in names_to_unflatten:
                 prefix = self.flattened_arguments_mapper.pop(name)
                 if prefix not in items:
                     items[prefix] = {}
                 items[prefix][name.removeprefix(prefix + "_")] = items[name]
                 items.pop(name)
+            names_to_unflatten = items.keys() & self.flattened_arguments_mapper.keys()
 
     def extract_parameters_info(self) -> Iterator[CliParameter]:
         for field_ in fields(self.object):  # type: ignore[arg-type]

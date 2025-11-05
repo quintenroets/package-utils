@@ -1,3 +1,4 @@
+import inspect
 import typing
 from collections.abc import Callable
 from dataclasses import dataclass, is_dataclass
@@ -27,7 +28,7 @@ class EntryPoint(Generic[T]):
         return result
 
     def setup_argument_class(self) -> None:
-        if self.argument_class is None:
+        if self.argument_class is None and inspect.isfunction(self.method):
             self.extract_argument_class()
         if self.argument_class is not None:
             method_doc = self.method.__doc__

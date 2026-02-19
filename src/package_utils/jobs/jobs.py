@@ -18,9 +18,8 @@ def run_jobs(
     executor_class = ProcessPoolExecutor if use_multiprocessing else ThreadPoolExecutor
     executor = executor_class(max_workers=number_of_workers)
     futures: Queue[Future[T] | None] = Queue()
-    submission_semaphore = Semaphore(
-        number_of_workers * 2
-    )  # large enough to keep all workers busy
+    submission_semaphore = Semaphore(number_of_workers * 2)
+    # large enough to keep all workers busy
 
     def launch_jobs() -> None:
         with executor:

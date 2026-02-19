@@ -1,8 +1,8 @@
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future, ProcessPoolExecutor, ThreadPoolExecutor
 from queue import Queue
-from typing import TypeVar
 from threading import Semaphore, Thread
+from typing import TypeVar
 
 T = TypeVar("T")
 

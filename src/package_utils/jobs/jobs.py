@@ -17,17 +17,17 @@ def run_jobs(
         return (job() for job in jobs)
     executor_class = ProcessPoolExecutor if use_multiprocessing else ThreadPoolExecutor
     executor = executor_class(max_workers=number_of_workers)
-    futures: Queue[Future[T] | None] = Queue(maxsize=number_of_workers * 2)
-    # large enough to keep all workers busy
+    results: Queue[Future[T] | None] = Queue(maxsize=number_of_workers * 2)
 
     def launch_jobs() -> None:
         with executor:
             for job in jobs:
-                futures.put(executor.submit(job))
-            futures.put(None)
+                future = executor.submit(job)
+                future.add_done_callback(results.put)
+        results.put(None)
 
     threading.Thread(target=launch_jobs).start()
-    return extract_results(futures)
+    return extract_results(results)
 
 
 def extract_results(futures: Queue[Future[T] | None]) -> Iterator[T]:

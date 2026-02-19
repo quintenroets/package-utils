@@ -1,7 +1,7 @@
-import threading
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future, ProcessPoolExecutor, ThreadPoolExecutor
 from queue import Queue
+from threading import Semaphore, Thread
 from typing import TypeVar
 
 T = TypeVar("T")
@@ -17,16 +17,20 @@ def run_jobs(
         return (job() for job in jobs)
     executor_class = ProcessPoolExecutor if use_multiprocessing else ThreadPoolExecutor
     executor = executor_class(max_workers=number_of_workers)
-    futures: Queue[Future[T] | None] = Queue(maxsize=number_of_workers * 2)
+    futures: Queue[Future[T] | None] = Queue()
+    submission_semaphore = Semaphore(number_of_workers * 2)
     # large enough to keep all workers busy
 
     def launch_jobs() -> None:
         with executor:
             for job in jobs:
-                futures.put(executor.submit(job))
-            futures.put(None)
+                submission_semaphore.acquire()
+                future = executor.submit(job)
+                future.add_done_callback(futures.put)
+                future.add_done_callback(lambda _: submission_semaphore.release())
+        futures.put(None)
 
-    threading.Thread(target=launch_jobs).start()
+    Thread(target=launch_jobs).start()
     return extract_results(futures)
 
 

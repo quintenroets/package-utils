@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import dataclasses
+import getpass
 import os
+import shlex
+import subprocess
 import typing
 from dataclasses import dataclass, fields, is_dataclass
 from typing import Generic, TypeVar, cast
 
-import cli
 import dacite
 
 from package_utils.context.models import Config, Options, Secrets
@@ -29,7 +31,12 @@ class SecretLoader:
 
     def load(self) -> str:
         env_name = self.name.upper()
-        return os.environ.get(env_name) or cli.capture_output("pw", self.name)
+        if password := os.environ.get(env_name):
+            return password
+        if askpass := os.environ.get("SECRET_ASKPASS"):
+            command = [*shlex.split(askpass), self.name]
+            return subprocess.check_output(command).decode().strip()  # noqa: S603
+        return getpass.getpass(f"Enter secret for {self.name}: ")
 
 
 @dataclass

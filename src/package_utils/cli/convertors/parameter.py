@@ -50,7 +50,7 @@ class CliParameter:
         annotations = self.extract_optional_annotations()
         annotation = next(annotations, None)
         if annotation is not None:
-            self.annotation = Optional[annotation]  # noqa: UP007
+            self.annotation = Optional[annotation]  # noqa: UP045
 
     def extract_optional_annotations(self) -> Iterator[object]:
         annotations = typing.get_args(self.annotation)

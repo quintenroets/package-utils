@@ -1,11 +1,11 @@
 [project]
 name = "package-utils"
-version = "0.8.2"
+version = "0.8.3"
 description = "Common utilities for Python packages"
 authors = [{name = "Quinten Roets", email = "qdr2104@columbia.edu"}]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.10, <3.14"
+requires-python = ">=3.10"
 dependencies = [
     "typer>=0.9.0, <1",
 ]
@@ -13,7 +13,6 @@ dependencies = [
 [project.optional-dependencies]
 context = [
     "dacite >=1.8.1, <2",
-    "powercli >= 0.2.0, <1",
     "PyYaml >=6.0.1, <7",
     "superpathlib >=2.0.0, <3",
 ]
@@ -66,6 +65,12 @@ ignore = [
     "ANN401",   # annotated with Any
     "D",        # docstrings
     "G004",     # logging f-string
+    "D1",       # missing docstrings
+    "D200",     # one-line docstring
+    "D203",     # conflicts with D211
+    "D205",     # blank line between summary and description
+    "D212",     # conflicts with D213
+    "D401",     # imperative first line
 ]
 
 [tool.ruff.lint.per-file-ignores]

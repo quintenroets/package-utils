@@ -87,12 +87,12 @@ def test_decorator(
                 result = path.yaml
                 return typing.cast("T", result)
 
-            @content.fget.setter
+            @content.fget.setter  # type: ignore[misc]
             def content(self, content_: T) -> None:
                 path.yaml = typing.cast("dict[str, str]", content_)
 
         test_model = TestModel()
-        test_model.content = content  # type: ignore[method-assign]
+        test_model.content = content  # type: ignore[misc]
         assert test_model.content == content
         path.yaml = typing.cast("dict[str, str]", content2)
         # tests are so quick to mtime needs to be increased manually

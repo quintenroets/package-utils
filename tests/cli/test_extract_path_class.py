@@ -19,7 +19,7 @@ def extract_path_class(annotation: object) -> type[pathlib.Path] | None:
         (Path, Path),
         (pathlib.Path, pathlib.Path),
         (Path | None, Path),
-        (Optional[Path], Path),  # noqa: UP007
+        (Optional[Path], Path),  # noqa: UP045
         (None, None),
         (str, None),
     ],

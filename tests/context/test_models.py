@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 from package_utils.context import Context
@@ -32,9 +33,12 @@ def test_config() -> None:
     assert context.secrets is None
 
 
+MOCK_SECRETS = {"TOKEN": "mock", "API_ID": "mock", "API_TOKEN": "mock"}
+
+
 def test_secrets() -> None:
     context = Context[None, None, Secrets](Secrets=Secrets)
-    with patch("cli.capture_output"):
+    with patch.dict(os.environ, MOCK_SECRETS):
         assert isinstance(context.secrets, Secrets)
     assert context.options is None
     assert context.config is None
@@ -44,7 +48,7 @@ def test_full_context() -> None:
     context = Context(Options=Options, Config=Config, Secrets=Secrets)
     assert isinstance(context.options, Options)
     assert isinstance(context.config, Config)
-    with patch("cli.capture_output"):
+    with patch.dict(os.environ, MOCK_SECRETS):
         assert isinstance(context.secrets, Secrets)
 
 

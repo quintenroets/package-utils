@@ -27,7 +27,7 @@ class Convertor(class_.Convertor[T]):
         def wrapped_method(**kwargs: Any) -> Any:
             specified_kwargs = {k: v for k, v in kwargs.items() if v is not None}
             if self.flattened_arguments_mapper:
-                import dacite
+                import dacite  # noqa: PLC0415
 
                 self.unflatten(specified_kwargs)
                 config = dacite.Config(strict=True)

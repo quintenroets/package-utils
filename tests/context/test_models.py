@@ -2,10 +2,13 @@ import os
 from unittest.mock import patch
 
 from package_utils.context import Context
+from package_utils.context.loaders.secrets_ import SecretLoader
 from tests.context.models import options_normal_class
 from tests.context.models.config import Config
 from tests.context.models.options import Options
 from tests.context.models.secrets_ import Secrets
+
+ABSENT_NAME = "my_nonexistent_secret_xyz"
 
 
 def test_empty_context() -> None:
@@ -50,6 +53,28 @@ def test_full_context() -> None:
     assert isinstance(context.config, Config)
     with patch.dict(os.environ, MOCK_SECRETS):
         assert isinstance(context.secrets, Secrets)
+
+
+def test_secret_loader_askpass() -> None:
+    with (
+        patch.dict(os.environ, {"SECRET_ASKPASS": "/mock/pw"}),
+        patch(
+            "package_utils.context.loaders.secrets_.subprocess.check_output",
+            return_value=b"mock_value",
+        ),
+    ):
+        assert SecretLoader(ABSENT_NAME).load() == "mock_value"
+
+
+def test_secret_loader_getpass() -> None:
+    with (
+        patch.dict(os.environ, {"SECRET_ASKPASS": ""}),
+        patch(
+            "package_utils.context.loaders.secrets_.getpass.getpass",
+            return_value="mock_value",
+        ),
+    ):
+        assert SecretLoader(ABSENT_NAME).load() == "mock_value"
 
 
 def test_normal_class_options() -> None:

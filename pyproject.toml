@@ -29,7 +29,7 @@ dev = [
     "superpathlib >=2.0.0, <3",
 
     "hypothesis >=6.91.0, <7",
-    "package-dev-tools >=0.7.1, <1",
+    "package-dev-tools >=0.8.0, <1",
     "package-dev-utils >=0.1.6, <1",
 ]
 

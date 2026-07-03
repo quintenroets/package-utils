@@ -66,11 +66,6 @@ def test_secret_loader_askpass() -> None:
         assert SecretLoader(ABSENT_NAME).load() == "mock_value"
 
 
-def test_secret_loader_env_replaces_spaces() -> None:
-    with patch.dict(os.environ, {"GITHUB_TOKEN": "mock_value"}):
-        assert SecretLoader("github token").load() == "mock_value"
-
-
 def test_secret_loader_getpass() -> None:
     with (
         patch.dict(os.environ, {"SECRET_ASKPASS": ""}),

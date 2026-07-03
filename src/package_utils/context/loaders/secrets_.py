@@ -30,7 +30,7 @@ class SecretLoader:
     name: str
 
     def load(self) -> str:
-        env_name = self.name.upper()
+        env_name = self.name.upper().replace(" ", "_")
         if password := os.environ.get(env_name):
             return password
         if askpass := os.environ.get("SECRET_ASKPASS"):

@@ -1,12 +1,12 @@
 import random
 from collections.abc import Iterator
 
-import click
 import pytest
 from hypothesis import given, strategies
 from hypothesis.strategies import SearchStrategy
 from package_dev_utils.tests.args import cli_args, no_cli_args
 from superpathlib import Path
+from typer._click.exceptions import NoSuchOption
 
 from package_utils.cli import instantiate_from_cli_args
 from tests.cli.models import (
@@ -101,7 +101,7 @@ def test_optional_message(class_: type[Options], message: str) -> None:
 @given(verbosity=strategies.integers())
 def test_verbosity_attribute_not_exposed(class_: type[Options], verbosity: int) -> None:
     test_args = cli_args("--verbosity", verbosity)
-    expect_exception = pytest.raises(click.exceptions.NoSuchOption)
+    expect_exception = pytest.raises(NoSuchOption)
     with test_args, expect_exception:
         instantiate_from_cli_args(class_)
 
@@ -130,7 +130,7 @@ def test_positional_argument(class_: type[Options], action: Action) -> None:
 @given(action=strategies.sampled_from(Action))
 def test_positional_argument_no_option(class_: type[Options], action: Action) -> None:
     test_args = cli_args("--action", action.value)
-    expect_exception = pytest.raises(click.exceptions.NoSuchOption)
+    expect_exception = pytest.raises(NoSuchOption)
     with test_args, expect_exception:
         instantiate_from_cli_args(class_)
 

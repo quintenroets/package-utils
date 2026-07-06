@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-import getpass
 import os
 import shlex
 import subprocess
@@ -31,12 +30,16 @@ class SecretLoader:
 
     def load(self) -> str:
         env_name = self.name.upper().replace(" ", "_")
-        if password := os.environ.get(env_name):
-            return password
-        if askpass := os.environ.get("SECRET_ASKPASS"):
+        value = os.environ.get(env_name)
+        if not value and (askpass := os.environ.get("SECRET_ASKPASS")):
             command = [*shlex.split(askpass), self.name]
-            return subprocess.check_output(command).decode().strip()  # noqa: S603
-        return getpass.getpass(f"Enter secret for {self.name}: ")
+            value = subprocess.check_output(command).decode().strip()  # noqa: S603
+        if not value:
+            message = (
+                f"Secret {self.name!r} not found (set {env_name} or SECRET_ASKPASS)"
+            )
+            raise RuntimeError(message)
+        return value
 
 
 @dataclass

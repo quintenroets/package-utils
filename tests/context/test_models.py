@@ -1,6 +1,8 @@
 import os
 from unittest.mock import patch
 
+import pytest
+
 from package_utils.context import Context
 from package_utils.context.loaders.secrets_ import SecretLoader
 from tests.context.models import options_normal_class
@@ -66,15 +68,12 @@ def test_secret_loader_askpass() -> None:
         assert SecretLoader(ABSENT_NAME).load() == "mock_value"
 
 
-def test_secret_loader_getpass() -> None:
+def test_secret_loader_missing() -> None:
     with (
         patch.dict(os.environ, {"SECRET_ASKPASS": ""}),
-        patch(
-            "package_utils.context.loaders.secrets_.getpass.getpass",
-            return_value="mock_value",
-        ),
+        pytest.raises(RuntimeError, match=ABSENT_NAME),
     ):
-        assert SecretLoader(ABSENT_NAME).load() == "mock_value"
+        SecretLoader(ABSENT_NAME).load()
 
 
 def test_normal_class_options() -> None:

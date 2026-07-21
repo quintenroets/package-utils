@@ -2,11 +2,11 @@ import random
 from collections.abc import Iterator
 
 import pytest
+from click.exceptions import NoSuchOption
 from hypothesis import given, strategies
 from hypothesis.strategies import SearchStrategy
 from package_dev_utils.tests.args import cli_args, no_cli_args
 from superpathlib import Path
-from typer._click.exceptions import NoSuchOption
 
 from package_utils.cli import instantiate_from_cli_args
 from tests.cli.models import (

@@ -1,10 +1,9 @@
 import typing
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Self, TypeVar
 
 from superpathlib import Path
-from typing_extensions import Self
 
 T = TypeVar("T")
 

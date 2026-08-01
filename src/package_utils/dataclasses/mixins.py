@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import typing
 from dataclasses import asdict
-from typing import Any, TypeVar
+from typing import Any, Self, TypeVar
 
 import dacite
-from typing_extensions import Self
 
 if typing.TYPE_CHECKING:
     from _typeshed import DataclassInstance  # pragma: nocover

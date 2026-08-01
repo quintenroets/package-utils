@@ -23,22 +23,23 @@ class CachedFileContentRead(Generic[T]):
         return self.get(instance)
 
     def get(self, instance: Any) -> T:
-        if self.content is None or self.file_content_changed:
-            self.mtime = self.path.mtime
-            if self.path.exists():
-                self.content = self.read(instance)
-            if not self.content and self.default is not None:
-                self.content = self.default
+        mtime = self.path.mtime
+        if self.content is None or self.mtime is None or self.mtime < mtime:
+            self.load_content(instance, mtime)
         return typing.cast("T", self.content)
+
+    def load_content(self, instance: Any, mtime: float) -> None:
+        self.mtime = mtime
+        path_exists = mtime > 0
+        if path_exists:
+            self.content = self.read(instance)
+        if not self.content and self.default is not None:
+            self.content = self.default
 
     def read(self, instance: Any) -> T:
         return (
             self.load() if self.load_function is None else self.load_function(instance)
         )
-
-    @property
-    def file_content_changed(self) -> bool:
-        return self.mtime is None or self.mtime < self.path.mtime
 
     def load(self) -> T:
         content = self.path.yaml

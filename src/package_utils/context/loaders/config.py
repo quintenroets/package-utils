@@ -35,5 +35,7 @@ class Loader(OptionsLoader[Config], Generic[Options, Config]):
         from superpathlib import Path
 
         config = dacite.Config(type_hooks={Path: Path}, strict=True)
-        info = typing.cast("dict[str, Any]", path.yaml)
+        # the sidecar cache: a config read is a startup cost, and decoding it
+        # costs an order of magnitude less than the PyYAML import it avoids
+        info = typing.cast("dict[str, Any]", path.cached_yaml)
         return dacite.from_dict(class_type, info, config=config)

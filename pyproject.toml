@@ -20,14 +20,34 @@ context = [
 dataclasses = [
     "dacite >=1.8.1, <2",
 ]
+arrays = [
+    "numpy >=1.26, <3",
+    "blosc2 >=2.5, <5",
+]
 storage = [
     "superpathlib >= 2.0.0, <3",
+    "SQLAlchemy >=2, <3",
+    "alembic >=1.13, <2",
+]
+postgres = [
+    "psycopg[binary] >=3, <4",
 ]
 dev = [
     # context
     "dacite >=1.8.1, <2",
     "PyYaml >=6.0.1, <7",
     "superpathlib >=2.0.0, <3",
+
+    # storage
+    "SQLAlchemy >=2, <3",
+    "alembic >=1.13, <2",
+
+    # arrays
+    "numpy >=1.26, <3",
+    "blosc2 >=2.5, <5",
+
+    # postgres backend driver
+    "psycopg[binary] >=3, <4",
 
     "hypothesis >=6.91.0, <7",
     "package-dev-tools >=0.8.1, <1",
@@ -37,6 +57,10 @@ dev = [
 [project.urls]
 "Source Code" = "https://github.com/quintenroets/package-utils"
 
+[tool.uv.sources]
+# the yaml sidecar cache (`cached_yaml`) used by the config loader is unreleased
+superpathlib = { path = "../superpathlib", editable = true }
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
@@ -44,6 +68,12 @@ build-backend = "setuptools.build_meta"
 [tool.coverage.run]
 command_line = "-m pytest tests"
 relative_files = true
+omit = [
+    # requires a live PostgreSQL server
+    "tests/storage/test_postgres_conformance.py",
+    # editable installs bring their source into scope
+    "*/superpathlib/*",
+]
 
 [tool.coverage.report]
 precision = 4
@@ -52,6 +82,10 @@ fail_under = 100
 [tool.mypy]
 strict = true
 no_implicit_reexport = false
+
+[[tool.mypy.overrides]]
+module = "blosc2.*"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 pythonpath = [
@@ -80,7 +114,11 @@ ignore = [
     "F401"  # unused import
 ]
 "tests/*" = [
-    "S101"  # assert used
+    "S101",    # assert used
+    "PLR2004"  # magic value used in comparison
+]
+"tests/storage/fields.py" = [
+    "N801"  # namespace classes are lowercase SQL identifiers (table name / column prefix)
 ]
 "src/package_utils/cli/cli_runner.py" = [
     "PLC0415",  # deferring typer is the point: see cli/entry_point.py

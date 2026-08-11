@@ -52,3 +52,28 @@ class Options:
 
     def __post_init__(self) -> None:
         self.verbosity = 0
+
+
+action_help = "Anticipation"
+message_help = "Reverberation"
+
+
+@dataclass
+class FlatOptions:
+    """
+    Nothing nested and nothing required: a bare invocation needs no parser.
+    """
+
+    action: Annotated[Action, typer.Argument(help=action_help)] = Action.show
+    debug: bool = False
+    message: Annotated[str, typer.Option(help=message_help)] = "Hello World!"
+    messages: list[str] = field(default_factory=list)
+    verbosity: int = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.verbosity = 0
+
+
+@dataclass
+class OptionsWithoutDefaults:
+    message: str

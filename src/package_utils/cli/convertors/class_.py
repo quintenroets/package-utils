@@ -20,4 +20,5 @@ class Convertor(method.Convertor[T]):
         for parameter in self.method_parameters:
             if parameter.name != "self":
                 annotation = self.annotations[parameter.name]
-                yield CliParameter(parameter, annotation)
+                declared = self.declared_annotations[parameter.name]
+                yield CliParameter(parameter, annotation, declared)

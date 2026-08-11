@@ -7,7 +7,8 @@ license = "MIT"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "typer>=0.9.0, <1",
+    # 0.17 made typer's rich help rendering a lazy import; 0.26 vendors click
+    "typer>=0.17, <0.26",
 ]
 
 [project.optional-dependencies]
@@ -80,6 +81,18 @@ ignore = [
 ]
 "tests/*" = [
     "S101"  # assert used
+]
+"src/package_utils/cli/cli_runner.py" = [
+    "PLC0415",  # deferring typer is the point: see cli/entry_point.py
+]
+"src/package_utils/cli/convertors/parameter.py" = [
+    "PLC0415",  # deferring typer is the point: see cli/entry_point.py
+]
+"src/package_utils/cli/convertors/method.py" = [
+    "PLC0415",  # deferring typer is the point: see cli/entry_point.py
+]
+"src/package_utils/cli/entry_point.py" = [
+    "PLC0415",  # deferring typer is the point: a bare invocation never parses
 ]
 
 [tool.setuptools.package-data]

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
-import typer
 from superpathlib import Path
 
 from .dataclass_model import (
@@ -12,6 +11,9 @@ from .dataclass_model import (
     NestedOptionsWithoutDefaults,
     default_nested_options,
 )
+
+if TYPE_CHECKING:
+    import typer  # pragma: nocover
 
 
 @dataclass

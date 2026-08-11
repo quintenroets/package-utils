@@ -10,7 +10,7 @@ from package_utils.cli.convertors.parameter import CliParameter
 
 def extract_path_class(annotation: object) -> type[pathlib.Path] | None:
     parameter = inspect.Parameter("parameter", inspect.Parameter.POSITIONAL_OR_KEYWORD)
-    return CliParameter(parameter, annotation).extract_path_class()
+    return CliParameter(parameter, annotation, annotation).extract_path_class()
 
 
 @pytest.mark.parametrize(

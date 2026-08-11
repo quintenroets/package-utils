@@ -27,7 +27,7 @@ class Loader(OptionsLoader[Config], Generic[Options, Config]):
         path = typing.cast("Path | None", optional_path)
         return (
             self.typed_model()
-            if path is None
+            if path is None or not path.exists()
             else self.load_from_file(self.typed_model, path)
         )
 

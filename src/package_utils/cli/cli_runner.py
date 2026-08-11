@@ -4,11 +4,12 @@ import sys
 import types
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar, cast
-
-import typer
+from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
 from . import convertors
+
+if TYPE_CHECKING:  # pragma: nocover
+    import typer
 
 T = TypeVar("T")
 
@@ -35,13 +36,15 @@ class Runner(Generic[T]):
 
     @classmethod
     def run_cli_entry_method(cls, method: Callable[..., T]) -> T:
+        import typer
+
         app = typer.Typer(add_completion=False)
         create_command = app.command()
         create_command(method)
         return cls.run_app(app)
 
     @classmethod
-    def run_app(cls, app: typer.Typer) -> T:
+    def run_app(cls, app: "typer.Typer") -> T:
         result_or_exit_code = app(standalone_mode=False)
         if isinstance(result_or_exit_code, int):
             sys.exit(result_or_exit_code)

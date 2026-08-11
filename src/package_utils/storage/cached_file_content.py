@@ -25,13 +25,16 @@ class CachedFileContentRead(Generic[T]):
     def get(self, instance: Any) -> T:
         if self.content is None or self.file_content_changed:
             self.mtime = self.path.mtime
-            if self.load_function is None:
-                self.content = self.load()
-            else:
-                self.content = self.load_function(instance)
+            if self.path.exists():
+                self.content = self.read(instance)
             if not self.content and self.default is not None:
                 self.content = self.default
-        return self.content
+        return typing.cast("T", self.content)
+
+    def read(self, instance: Any) -> T:
+        return (
+            self.load() if self.load_function is None else self.load_function(instance)
+        )
 
     @property
     def file_content_changed(self) -> bool:

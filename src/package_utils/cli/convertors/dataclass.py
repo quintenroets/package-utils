@@ -1,4 +1,3 @@
-import dataclasses
 import functools
 import inspect
 import typing
@@ -7,7 +6,7 @@ from dataclasses import MISSING, Field, dataclass, field, fields
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from . import class_
-from .parameter import CliParameter
+from .parameter import CliParameter, extract_dataclass
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance  # pragma: nocover
@@ -28,9 +27,12 @@ class Convertor(class_.Convertor[T]):
             specified_kwargs = {k: v for k, v in kwargs.items() if v is not None}
             if self.flattened_arguments_mapper:
                 import dacite  # noqa: PLC0415
+                import typer  # noqa: PLC0415
 
                 self.unflatten(specified_kwargs)
-                config = dacite.Config(strict=True)
+                # dacite resolves the annotations itself, and the module declaring
+                # them need not have imported the typer they reference
+                config = dacite.Config(strict=True, forward_references={"typer": typer})
                 result = dacite.from_dict(self.object, specified_kwargs, config=config)
             else:
                 result = self.object(**specified_kwargs)
@@ -57,7 +59,7 @@ class Convertor(class_.Convertor[T]):
 
     def extract_field_parameters(self, field_: Field[Any]) -> Iterator[CliParameter]:
         parameter = self.create_cli_parameter(field_)
-        dataclass_ = self.extract_dataclass(parameter)
+        dataclass_ = extract_dataclass(parameter.annotation)
         if dataclass_ is None:
             yield parameter
         else:
@@ -87,16 +89,5 @@ class Convertor(class_.Convertor[T]):
             default=default,
             annotation=field_.type,
         )
-        return CliParameter(parameter, annotation)
-
-    @classmethod
-    def extract_dataclass(
-        cls,
-        parameter: CliParameter,
-    ) -> "type[DataclassInstance]|None":
-        annotations = (
-            annotation
-            for annotation in parameter.extract_annotations()
-            if dataclasses.is_dataclass(annotation)
-        )
-        return next(annotations, None)
+        declared = self.declared_annotations[field_.name]
+        return CliParameter(parameter, annotation, declared)

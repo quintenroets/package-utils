@@ -64,7 +64,7 @@ class Loader(options.Loader[Secrets], Generic[Options, Config, Secrets]):
         config = None if self.config_loader is None else self.config_loader.value
         path = config and getattr(config, "secrets_path", None)
         path = typing.cast("Path", path)
-        result = {} if path is None else path.yaml
+        result = {} if path is None or not path.exists() else path.yaml
         return typing.cast("dict[str, str]", result)
 
     def add_defaults(

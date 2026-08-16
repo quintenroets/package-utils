@@ -12,7 +12,7 @@ class Options:
     Options.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         action: Annotated[Action, typer.Argument()] = dataclass_model.Options.action,
         ignore_paths: Annotated[list[Path] | None, typer.Argument()] = None,

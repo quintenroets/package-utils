@@ -64,6 +64,7 @@ fix = true
 select = ["ALL"]
 ignore = [
     "ANN401",   # annotated with Any
+    "CPY001",   # missing copyright notice
     "D",        # docstrings
     "G004",     # logging f-string
     "D1",       # missing docstrings

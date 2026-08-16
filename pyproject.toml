@@ -65,13 +65,13 @@ select = ["ALL"]
 ignore = [
     "ANN401",   # annotated with Any
     "CPY001",   # missing copyright notice
-    "G004",     # logging f-string
     "D1",       # missing docstrings
     "D200",     # one-line docstring
     "D203",     # conflicts with D211
     "D205",     # blank line between summary and description
     "D212",     # conflicts with D213
     "D401",     # imperative first line
+    "G004",     # logging f-string
 ]
 
 [tool.ruff.lint.per-file-ignores]

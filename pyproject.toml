@@ -42,6 +42,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
 command_line = "-m pytest tests"
+relative_files = true
 
 [tool.coverage.report]
 precision = 4
@@ -63,14 +64,14 @@ fix = true
 select = ["ALL"]
 ignore = [
     "ANN401",   # annotated with Any
-    "D",        # docstrings
-    "G004",     # logging f-string
+    "CPY001",   # missing copyright notice
     "D1",       # missing docstrings
     "D200",     # one-line docstring
     "D203",     # conflicts with D211
     "D205",     # blank line between summary and description
     "D212",     # conflicts with D213
     "D401",     # imperative first line
+    "G004",     # logging f-string
 ]
 
 [tool.ruff.lint.per-file-ignores]

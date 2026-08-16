@@ -202,7 +202,7 @@ def test_nested_options(class_: type[Options], *, use_nesting: bool) -> None:
     optional_message=text_strategy(),
     n_retries=strategies.integers(),
 )
-def test_combined_arguments(  # noqa: PLR0913
+def test_combined_arguments(  # noqa: PLR0913, PLR0917
     class_: type[Options],
     action: Action,
     paths: list[str],

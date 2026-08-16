@@ -20,8 +20,7 @@ class Options:
     output_path: Path = field(default_factory=Path.cwd)
 
 
-def main(options: Options):
-    ...
+def main(options: Options): ...
 
 
 entry_point = create_entry_point(main)

@@ -1,16 +1,12 @@
 from __future__ import annotations
 
 import dataclasses
-import os
-import shlex
-import subprocess
 import typing
 from dataclasses import dataclass, fields, is_dataclass
 from typing import Generic, TypeVar, cast
 
-import dacite
-
 from package_utils.context.models import Config, Options, Secrets
+from package_utils.secrets_ import SecretLoader
 
 from . import options
 
@@ -25,28 +21,12 @@ T = TypeVar("T", bound="DataclassInstance")
 
 
 @dataclass
-class SecretLoader:
-    name: str
-
-    def load(self) -> str:
-        env_name = self.name.upper().replace(" ", "_")
-        value = os.environ.get(env_name)
-        if not value and (askpass := os.environ.get("SECRET_ASKPASS")):
-            command = [*shlex.split(askpass), self.name]
-            value = subprocess.check_output(command).decode().strip()  # noqa: S603
-        if not value:
-            message = (
-                f"Secret {self.name!r} not found (set {env_name} or SECRET_ASKPASS)"
-            )
-            raise RuntimeError(message)
-        return value
-
-
-@dataclass
 class DataclassLoader(Generic[T]):
     class_: type[T]
 
     def load(self) -> T:
+        import dacite
+
         return dacite.from_dict(self.class_, {})
 
 
@@ -56,6 +36,8 @@ class Loader(options.Loader[Secrets], Generic[Options, Config, Secrets]):
     delimiter: str = "_"
 
     def load(self) -> DataclassInstance:
+        import dacite
+
         self.add_defaults(self.typed_model)
         file_secrets = self.load_file_secrets()
         return dacite.from_dict(self.typed_model, file_secrets)

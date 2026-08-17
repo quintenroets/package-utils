@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-import os
-import subprocess
-import sys
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -16,6 +12,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable  # pragma: nocover
 
 from tests.cli.models import dataclass_model, deferred_typer_model
+from tests.utils import run_isolated
 
 
 def run_with_arguments(
@@ -160,12 +157,7 @@ def test_deferred_typer_keeps_the_declared_help(
 
 
 def test_bare_invocation_never_imports_typer() -> None:
-    """
-    The whole saving is the import, so only its absence proves the optimization.
-
-    A subprocess is the only place it can be observed: any other test in this
-    process has already put typer in `sys.modules`.
-    """
+    """The whole saving is the import, so only its absence proves the optimization."""
     source = """
 import sys
 from tests.cli.models.deferred_typer_model import DeferredOptions
@@ -173,14 +165,4 @@ from package_utils.cli import create_entry_point
 create_entry_point(DeferredOptions)()
 assert "typer" not in sys.modules, "the fast path imported typer"
 """
-    root = Path(__file__).parent.parent.parent
-    environment = {
-        **os.environ,
-        "PYTHONPATH": os.pathsep.join((str(root / "src"), str(root))),
-    }
-    subprocess.run(  # noqa: S603
-        [sys.executable, "-c", source],
-        check=True,
-        env=environment,
-        cwd=root,
-    )
+    run_isolated(source)

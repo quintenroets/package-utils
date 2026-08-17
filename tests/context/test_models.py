@@ -1,16 +1,12 @@
 import os
 from unittest.mock import patch
 
-import pytest
-
 from package_utils.context import Context
-from package_utils.context.loaders.secrets_ import SecretLoader
 from tests.context.models import options_normal_class
 from tests.context.models.config import Config
 from tests.context.models.options import Options
 from tests.context.models.secrets_ import Secrets
-
-ABSENT_NAME = "my_nonexistent_secret_xyz"
+from tests.utils import run_isolated
 
 
 def test_empty_context() -> None:
@@ -57,25 +53,6 @@ def test_full_context() -> None:
         assert isinstance(context.secrets, Secrets)
 
 
-def test_secret_loader_askpass() -> None:
-    with (
-        patch.dict(os.environ, {"SECRET_ASKPASS": "/mock/pw"}),
-        patch(
-            "package_utils.context.loaders.secrets_.subprocess.check_output",
-            return_value=b"mock_value",
-        ),
-    ):
-        assert SecretLoader(ABSENT_NAME).load() == "mock_value"
-
-
-def test_secret_loader_missing() -> None:
-    with (
-        patch.dict(os.environ, {"SECRET_ASKPASS": ""}),
-        pytest.raises(RuntimeError, match=ABSENT_NAME),
-    ):
-        SecretLoader(ABSENT_NAME).load()
-
-
 def test_normal_class_options() -> None:
     context = Context[options_normal_class.Options, None, None](
         Options=options_normal_class.Options,
@@ -83,3 +60,29 @@ def test_normal_class_options() -> None:
     assert isinstance(context.options, options_normal_class.Options)
     assert context.config is None
     assert context.secrets is None
+
+
+def test_missing_config_file_never_imports_dacite() -> None:
+    """A config that is not there costs no more than constructing its defaults."""
+    source = """
+import sys
+from package_utils.context import Context
+from tests.context.models.config import Config
+from tests.context.models.options import Options
+context = Context[Options, Config, None](Options=Options, Config=Config)
+assert context.config == Config()
+assert "dacite" not in sys.modules, "a missing config file imported dacite"
+"""
+    run_isolated(source)
+
+
+def test_import_costs_nothing_beyond_stdlib() -> None:
+    """Each loader should cost its dependencies only once someone reaches for it."""
+    source = """
+import sys
+from package_utils.context import Context
+Context[None, None, None]()
+assert "dacite" not in sys.modules, "importing the context imported dacite"
+assert "superpathlib" not in sys.modules, "importing the context imported superpathlib"
+"""
+    run_isolated(source)

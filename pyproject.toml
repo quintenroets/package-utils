@@ -94,6 +94,15 @@ ignore = [
 "src/package_utils/cli/entry_point.py" = [
     "PLC0415",  # deferring typer is the point: a bare invocation never parses
 ]
+"src/package_utils/context/loaders/config.py" = [
+    "PLC0415",  # dacite and superpathlib cost nothing until a config is read
+]
+"src/package_utils/context/loaders/secrets_.py" = [
+    "PLC0415",  # dacite costs nothing until a secrets model is resolved
+]
+"src/package_utils/context/loaders/loaders.py" = [
+    "PLC0415",  # a loader nobody reaches for should not import its dependencies
+]
 
 [tool.setuptools.package-data]
 package_utils = ["py.typed"]

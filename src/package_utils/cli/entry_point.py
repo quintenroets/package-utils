@@ -1,12 +1,9 @@
 import inspect
-import typing
 from collections.abc import Callable
 from dataclasses import dataclass, is_dataclass
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from typing import Any, Generic, TypeVar
 
-if TYPE_CHECKING:  # pragma: nocover
-    from _typeshed import DataclassInstance
-
+from package_utils.annotations import first_parameter_types
 
 from .cli_runner import Runner
 
@@ -36,10 +33,6 @@ class EntryPoint(Generic[T]):
                 self.argument_class.__doc__ = method_doc
 
     def extract_argument_class(self) -> None:
-        type_hints = typing.get_type_hints(self.method)
-        type_hints.pop("return", None)
-        type_hint_values = type_hints.values()
-        if type_hint_values:
-            type_hint = next(iter(type_hint_values))
-            if is_dataclass(type_hint):
-                self.argument_class = cast("type[DataclassInstance]", type_hint)
+        argument_class = next(first_parameter_types(self.method), None)
+        if is_dataclass(argument_class):
+            self.argument_class = argument_class

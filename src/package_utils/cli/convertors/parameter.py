@@ -1,16 +1,13 @@
 import collections
 import inspect
-import types
 import typing
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any
 
 import typer
-
-OptionalPathClass = type[Path] | None
 
 
 @dataclass
@@ -34,7 +31,6 @@ class CliParameter:
         path_class = self.extract_path_class()
         if path_class is not None:
             self.monkey_patch_path_convertor(path_class)
-        self.convert_optional_syntax()
         OptionInfo = typer.Argument if self.is_argument else typer.Option  # noqa: N806
         option_info = OptionInfo(path_type=path_class)  # type: ignore[arg-type]
         return Annotated[self.annotation, option_info]
@@ -45,19 +41,6 @@ class CliParameter:
             return None if value is None else path_class(value)
 
         typer.main.param_path_convertor = convert
-
-    def convert_optional_syntax(self) -> None:
-        annotations = self.extract_optional_annotations()
-        annotation = next(annotations, None)
-        if annotation is not None:
-            self.annotation = Optional[annotation]  # noqa: UP045
-
-    def extract_optional_annotations(self) -> Iterator[object]:
-        annotations = typing.get_args(self.annotation)
-        if types.NoneType in annotations:
-            for annotation in annotations:
-                if annotation != types.NoneType:
-                    yield annotation
 
     def extract_path_class(self) -> type[Path] | None:
         annotations = self.extract_annotations()

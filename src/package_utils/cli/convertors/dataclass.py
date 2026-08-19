@@ -20,13 +20,13 @@ T = TypeVar("T")
 class Convertor(class_.Convertor[T]):
     object: type[T]
     name_prefix: str = ""
-    flattened_arguments_mapper: dict[str, str] = field(default_factory=dict)
+    argument_prefixes: dict[str, str] = field(default_factory=dict)
 
     def create_cli_entry_method(self) -> Callable[..., T]:
         @functools.wraps(self.annotated_method)
         def wrapped_method(**kwargs: Any) -> Any:
             specified_kwargs = {k: v for k, v in kwargs.items() if v is not None}
-            if self.flattened_arguments_mapper:
+            if self.argument_prefixes:
                 import dacite  # noqa: PLC0415
 
                 self.unflatten(specified_kwargs)
@@ -40,15 +40,11 @@ class Convertor(class_.Convertor[T]):
         return typing.cast("Callable[..., T]", wrapped_method)
 
     def unflatten(self, items: dict[str, Any]) -> None:
-        names_to_unflatten = items.keys() & self.flattened_arguments_mapper.keys()
-        while self.flattened_arguments_mapper and names_to_unflatten:
-            for name in names_to_unflatten:
-                prefix = self.flattened_arguments_mapper.pop(name)
-                if prefix not in items:
-                    items[prefix] = {}
-                items[prefix][name.removeprefix(prefix + "_")] = items[name]
-                items.pop(name)
-            names_to_unflatten = items.keys() & self.flattened_arguments_mapper.keys()
+        while flattened_names := items.keys() & self.argument_prefixes.keys():
+            for name in flattened_names:
+                prefix = self.argument_prefixes[name]
+                nested_name = name.removeprefix(prefix + "_")
+                items.setdefault(prefix, {})[nested_name] = items.pop(name)
 
     def extract_parameters_info(self) -> Iterator[CliParameter]:
         for field_ in fields(self.object):  # type: ignore[arg-type]
@@ -71,7 +67,7 @@ class Convertor(class_.Convertor[T]):
         name = parameter.parameter.name
         convertor = Convertor(dataclass_, name_prefix=f"{name}_")
         for nested_parameter in convertor.extract_parameters_info():
-            self.flattened_arguments_mapper[nested_parameter.parameter.name] = name
+            self.argument_prefixes[nested_parameter.parameter.name] = name
             yield nested_parameter
 
     def create_cli_parameter(self, field_: Field[Any]) -> CliParameter:

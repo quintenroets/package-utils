@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated
 
 import typer
 
@@ -15,17 +15,14 @@ class CliParameter:
     parameter: inspect.Parameter
     annotation: object
 
-    @property
-    def default(self) -> Any:
-        return self.parameter.default
-
     def convert(self) -> inspect.Parameter:
         annotation = self.convert_annotation()
         default = self.convert_default()
         return self.parameter.replace(annotation=annotation, default=default)
 
     def convert_default(self) -> object:
-        return self.default.value if isinstance(self.default, Enum) else self.default
+        default = self.parameter.default
+        return default.value if isinstance(default, Enum) else default
 
     def convert_annotation(self) -> object:
         path_class = self.extract_path_class()

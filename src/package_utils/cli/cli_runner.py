@@ -1,7 +1,5 @@
 import dataclasses
-import inspect
 import sys
-import types
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar, cast
@@ -18,20 +16,10 @@ class Runner(Generic[T]):
     object: Callable[..., T] | type[T]
 
     def run_with_cli_args(self) -> T:
-        convertor_module = self.determine_convertor_module()
-        convertor = convertor_module.Convertor(self.object)
-        cli_entry_method = convertor.run()
-        return self.run_cli_entry_method(cli_entry_method)
-
-    def determine_convertor_module(self) -> types.ModuleType:
         is_dataclass = dataclasses.is_dataclass(self.object)
-        convertor_module: types.ModuleType
-        if is_dataclass:
-            convertor_module = convertors.dataclass
-        else:
-            is_class = inspect.isclass(self.object)
-            convertor_module = convertors.class_ if is_class else convertors.method
-        return convertor_module
+        module = convertors.dataclass if is_dataclass else convertors.method
+        cli_entry_method = module.Convertor(self.object).run()
+        return self.run_cli_entry_method(cli_entry_method)
 
     @classmethod
     def run_cli_entry_method(cls, method: Callable[..., T]) -> T:

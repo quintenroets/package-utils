@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import MISSING, Field, dataclass, field, fields
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from . import class_
+from . import method
 from .parameter import CliParameter
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ T = TypeVar("T")
 
 
 @dataclass
-class Convertor(class_.Convertor[T]):
+class Convertor(method.Convertor[T]):
     object: type[T]
     name_prefix: str = ""
     argument_prefixes: dict[str, str] = field(default_factory=dict)

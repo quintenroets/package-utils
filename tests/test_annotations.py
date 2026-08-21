@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from types import NoneType, SimpleNamespace
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
 import pytest
 
@@ -39,6 +39,10 @@ def unannotated_first_parameter(options, name: str) -> None:  # type: ignore[no-
         (NoneType, [NoneType]),
         (Annotated[int, "metadata"], [int]),
         (type_alias, [list]),
+        (Literal["a", "b"], [str, str]),
+        (Literal[1, "a"], [int, str]),
+        (Literal["a"] | None, [str]),
+        (Annotated[Literal[1], "metadata"], [int]),
     ],
 )
 def test_base_types_of(annotation: object, base_types: list[type]) -> None:

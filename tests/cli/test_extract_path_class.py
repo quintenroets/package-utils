@@ -1,6 +1,6 @@
 import inspect
 import pathlib
-from typing import Optional
+from typing import Literal, Optional
 
 import pytest
 from superpathlib import Path
@@ -22,6 +22,7 @@ def extract_path_class(annotation: object) -> type[pathlib.Path] | None:
         (Optional[Path], Path),  # noqa: UP045
         (None, None),
         (str, None),
+        (Literal["a", "b"], None),
     ],
 )
 def test_extract_path_class(annotation: object, path_class: type[pathlib.Path]) -> None:

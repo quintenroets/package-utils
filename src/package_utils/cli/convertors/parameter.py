@@ -3,7 +3,6 @@ import inspect
 import typing
 from collections.abc import Iterator
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 from typing import Annotated
 
@@ -16,28 +15,10 @@ class CliParameter:
     annotation: object
 
     def convert(self) -> inspect.Parameter:
-        annotation = self.convert_annotation()
-        default = self.convert_default()
-        return self.parameter.replace(annotation=annotation, default=default)
-
-    def convert_default(self) -> object:
-        default = self.parameter.default
-        return default.value if isinstance(default, Enum) else default
-
-    def convert_annotation(self) -> object:
         path_class = self.extract_path_class()
-        if path_class is not None:
-            self.monkey_patch_path_convertor(path_class)
         OptionInfo = typer.Argument if self.is_argument else typer.Option  # noqa: N806
-        option_info = OptionInfo(path_type=path_class)  # type: ignore[arg-type]
-        return Annotated[self.annotation, option_info]
-
-    @classmethod
-    def monkey_patch_path_convertor(cls, path_class: type[Path]) -> None:
-        def convert(value: str | None = None) -> Path | None:
-            return None if value is None else path_class(value)
-
-        typer.main.param_path_convertor = convert
+        info = OptionInfo(path_type=path_class)  # type: ignore[arg-type]
+        return self.parameter.replace(annotation=Annotated[self.annotation, info])
 
     def extract_path_class(self) -> type[Path] | None:
         annotations = self.extract_annotations()

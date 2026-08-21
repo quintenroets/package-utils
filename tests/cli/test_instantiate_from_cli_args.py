@@ -71,6 +71,7 @@ def test_config_path(class_: type[Options]) -> None:
     with cli_args("--config-path", config_path):
         options = instantiate_from_cli_args(class_)
     assert options.config_path == config_path
+    assert type(options.config_path) is Path
 
 
 @class_argument

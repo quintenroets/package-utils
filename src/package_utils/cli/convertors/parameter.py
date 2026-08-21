@@ -43,11 +43,11 @@ class CliParameter:
         annotations = self.extract_annotations()
         path_annotation = None
         for sub_annotation in annotations:
-            if sub_annotation is not None and issubclass(sub_annotation, Path):
+            if isinstance(sub_annotation, type) and issubclass(sub_annotation, Path):
                 path_annotation = sub_annotation
         return path_annotation
 
-    def extract_annotations(self) -> Iterator[type]:
+    def extract_annotations(self) -> Iterator[object]:
         annotations = collections.deque([self.annotation])
         while annotations:
             annotation = annotations.popleft()
@@ -55,7 +55,7 @@ class CliParameter:
             if sub_annotations:
                 annotations.extend(sub_annotations)
             else:
-                yield typing.cast("type", annotation)
+                yield annotation
 
     @property
     def is_argument(self) -> bool:

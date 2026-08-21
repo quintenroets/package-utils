@@ -95,4 +95,5 @@ class Convertor(method.Convertor[T]):
             for annotation in parameter.extract_annotations()
             if dataclasses.is_dataclass(annotation)
         )
-        return next(annotations, None)
+        annotation = next(annotations, None)
+        return typing.cast("type[DataclassInstance]|None", annotation)

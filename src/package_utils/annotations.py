@@ -6,6 +6,7 @@ from typing import (
     TYPE_CHECKING,
     Annotated,
     Any,
+    Literal,
     Union,
     get_args,
     get_origin,
@@ -36,6 +37,9 @@ def base_types_of(annotation: object) -> Iterator[type]:
                 yield from base_types_of(argument)
     elif resolved_annotation is Annotated:
         yield from base_types_of(get_args(annotation)[0])
+    elif resolved_annotation is Literal:
+        for argument in get_args(annotation):
+            yield type(argument)
     elif isinstance(resolved_annotation, type):
         yield resolved_annotation
     else:

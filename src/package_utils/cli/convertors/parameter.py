@@ -15,9 +15,8 @@ class CliParameter:
     annotation: object
 
     def convert(self) -> inspect.Parameter:
-        path_class = self.extract_path_class()
         OptionInfo = typer.Argument if self.is_argument else typer.Option  # noqa: N806
-        info = OptionInfo(path_type=path_class)  # type: ignore[arg-type]
+        info = OptionInfo(path_type=self.extract_path_class())  # type: ignore[arg-type]
         return self.parameter.replace(annotation=Annotated[self.annotation, info])
 
     def extract_path_class(self) -> type[Path] | None:

@@ -1,50 +1,47 @@
 import collections
+import copy
 import inspect
 import typing
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
+from typer.models import ParameterInfo
 
 
 @dataclass
 class CliParameter:
     parameter: inspect.Parameter
-    annotation: object
+    annotation: Any
 
     def convert(self) -> inspect.Parameter:
-        Info = typer.Argument if self.is_argument else typer.Option  # noqa: N806
-        info = Info(path_type=self.extract_path_class())  # type: ignore[arg-type]
-        return self.parameter.replace(annotation=Annotated[self.annotation, info])
+        infos = (info for info in self.metadata if isinstance(info, ParameterInfo))
+        info = copy.copy(next(infos, typer.Option()))
+        path_classes = (type_ for type_ in self.extract_types() if is_path_class(type_))
+        info.path_type = typing.cast("type[str] | None", next(path_classes, None))
+        return self.parameter.replace(annotation=Annotated[self.type_, info])
 
-    def extract_path_class(self) -> type[Path] | None:
-        annotations = self.extract_annotations()
-        path_annotation = None
-        for sub_annotation in annotations:
-            if isinstance(sub_annotation, type) and issubclass(sub_annotation, Path):
-                path_annotation = sub_annotation
-        return path_annotation
-
-    def extract_annotations(self) -> Iterator[object]:
-        annotations = collections.deque([self.annotation])
-        while annotations:
-            annotation = annotations.popleft()
-            sub_annotations = typing.get_args(annotation)
-            if sub_annotations:
-                annotations.extend(sub_annotations)
+    def extract_types(self) -> Iterator[object]:
+        types = collections.deque([self.type_])
+        while types:
+            type_ = types.popleft()
+            sub_types = typing.get_args(type_)
+            if sub_types:
+                types.extend(sub_types)
             else:
-                yield annotation
+                yield type_
 
     @property
-    def is_argument(self) -> bool:
-        annotation = self.parameter.annotation
-        return (
-            "typer.Argument(" in annotation
-            if isinstance(annotation, str)
-            else any(
-                isinstance(info, typer.models.ArgumentInfo)
-                for info in typing.get_args(annotation)
-            )
-        )
+    def type_(self) -> Any:
+        type_ = self.annotation.__origin__ if self.metadata else self.annotation
+        return type_ | None if self.parameter.default is None else type_
+
+    @property
+    def metadata(self) -> tuple[Any, ...]:
+        return getattr(self.annotation, "__metadata__", ())
+
+
+def is_path_class(type_: object) -> bool:
+    return isinstance(type_, type) and issubclass(type_, Path)

@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Annotated
 
-import typer
 from superpathlib import Path
 
 from .dataclass_model import (
@@ -21,8 +19,8 @@ class Options:
     Options.
     """
 
-    action: Annotated[Action, typer.Argument()] = Action.show
-    ignore_paths: Annotated[list[Path], typer.Argument()] = field(default_factory=list)
+    action: Parameters.action = Action.show
+    ignore_paths: Parameters.ignore_paths = field(default_factory=list)
     action_on_error: Action = Action.show
     debug: bool = False
     config_path: Path = Path.draft

@@ -72,16 +72,10 @@ class Convertor(method.Convertor[T]):
 
     def create_cli_parameter(self, field_: Field[Any]) -> CliParameter:
         annotation = self.annotations[field_.name]
-        if field_.default is MISSING:
-            annotation = annotation | None
-            default = None
-        else:
-            default = field_.default
         parameter = inspect.Parameter(
             self.name_prefix + field_.name,
             inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            default=default,
-            annotation=field_.type,
+            default=None if field_.default is MISSING else field_.default,
         )
         return CliParameter(parameter, annotation)
 
@@ -90,10 +84,9 @@ class Convertor(method.Convertor[T]):
         cls,
         parameter: CliParameter,
     ) -> "type[DataclassInstance]|None":
-        annotations = (
-            annotation
-            for annotation in parameter.extract_annotations()
-            if dataclasses.is_dataclass(annotation)
+        types = (
+            type_
+            for type_ in parameter.extract_types()
+            if dataclasses.is_dataclass(type_)
         )
-        annotation = next(annotations, None)
-        return typing.cast("type[DataclassInstance]|None", annotation)
+        return typing.cast("type[DataclassInstance]|None", next(types, None))

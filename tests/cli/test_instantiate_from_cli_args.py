@@ -1,4 +1,5 @@
 import random
+import typing
 from collections.abc import Iterator
 
 import pytest
@@ -15,7 +16,7 @@ from tests.cli.models import (
     dataclass_model,
     dataclass_model_with_string_annotations,
 )
-from tests.cli.models.dataclass_model import Action, Options
+from tests.cli.models.dataclass_model import Action, Options, Parameters
 
 
 def text_strategy() -> SearchStrategy[str]:
@@ -63,8 +64,8 @@ def verify_defaults(options: Options) -> None:
 @class_argument
 @given(debug=strategies.booleans())
 def test_debug_attribute(class_: type[Options], debug: bool) -> None:  # noqa: FBT001
-    option_str = "--debug" if debug else "--no-debug"
-    with cli_args(option_str):
+    option_string = "--debug" if debug else "--no-debug"
+    with cli_args(option_string):
         options = instantiate_from_cli_args(class_)
     assert options.debug is debug
 
@@ -88,9 +89,10 @@ def test_log_path(class_: type[Options]) -> None:
 
 
 @class_argument
+@pytest.mark.parametrize("option_string", ["--message", "-m"])
 @given(message=text_strategy())
-def test_message(class_: type[Options], message: str) -> None:
-    with cli_args("--message", message):
+def test_message(class_: type[Options], option_string: str, message: str) -> None:
+    with cli_args(option_string, message):
         options = instantiate_from_cli_args(class_)
     assert options.message == message
 
@@ -118,10 +120,12 @@ def test_help(class_: type[Options], capsys: pytest.CaptureFixture[str]) -> None
     with pytest.raises(SystemExit) as exception:
         instantiate_from_cli_args(class_)
     assert exception.value.code == 0
-
-    captured = capsys.readouterr()
-    assert "Usage: " in captured.out
-    assert str(class_.__doc__).strip() in captured.out
+    output = capsys.readouterr().out
+    parameters = Parameters.action, Parameters.message
+    help_texts = (typing.get_args(parameter)[1].help for parameter in parameters)
+    expected = "Usage: ", str(class_.__doc__).strip(), *help_texts
+    for text in expected:
+        assert text in output
 
 
 @class_argument

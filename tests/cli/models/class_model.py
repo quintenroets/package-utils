@@ -1,10 +1,7 @@
-from typing import Annotated
-
-import typer
 from superpathlib import Path
 
 from tests.cli.models import dataclass_model
-from tests.cli.models.dataclass_model import Action
+from tests.cli.models.dataclass_model import Action, Parameters
 
 
 class Options:
@@ -14,8 +11,8 @@ class Options:
 
     def __init__(  # noqa: PLR0913, PLR0917
         self,
-        action: Annotated[Action, typer.Argument()] = dataclass_model.Options.action,
-        ignore_paths: Annotated[list[Path] | None, typer.Argument()] = None,
+        action: Parameters.action = dataclass_model.Options.action,
+        ignore_paths: Parameters.optional_ignore_paths = None,
         action_on_error: Action = dataclass_model.Options.action_on_error,
         debug: bool = dataclass_model.Options.debug,  # noqa: FBT001
         config_path: Path = dataclass_model.Options.config_path,

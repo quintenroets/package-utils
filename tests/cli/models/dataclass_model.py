@@ -26,14 +26,20 @@ default_nested_options = NestedOptionsWithoutDefaults(
 )
 
 
+class Parameters:
+    action = Annotated[Action, typer.Argument()]
+    ignore_paths = Annotated[list[Path], typer.Argument()]
+    optional_ignore_paths = Annotated[list[Path] | None, typer.Argument()]
+
+
 @dataclass
 class Options:
     """
     Options.
     """
 
-    action: Annotated[Action, typer.Argument()] = Action.show
-    ignore_paths: Annotated[list[Path], typer.Argument()] = field(default_factory=list)
+    action: Parameters.action = Action.show
+    ignore_paths: Parameters.ignore_paths = field(default_factory=list)
     action_on_error: Action = Action.show
     debug: bool = False
     config_path: Path = Path.draft

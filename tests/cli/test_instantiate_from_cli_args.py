@@ -1,5 +1,4 @@
 import random
-import typing
 from collections.abc import Iterator
 
 import pytest
@@ -16,12 +15,7 @@ from tests.cli.models import (
     dataclass_model,
     dataclass_model_with_string_annotations,
 )
-from tests.cli.models.dataclass_model import (
-    Action,
-    NestedOptions,
-    Options,
-    Parameters,
-)
+from tests.cli.models.dataclass_model import Action, Help, NestedOptions, Options
 
 
 def text_strategy() -> SearchStrategy[str]:
@@ -114,9 +108,7 @@ def test_help(class_: type[Options], capsys: pytest.CaptureFixture[str]) -> None
         instantiate_from_cli_args(class_)
     assert exception.value.code == 0
     output = capsys.readouterr().out
-    parameters = Parameters.action, Parameters.message
-    help_texts = (typing.get_args(parameter)[1].help for parameter in parameters)
-    expected = "Usage: ", str(class_.__doc__).strip(), *help_texts
+    expected = "Usage: ", str(class_.__doc__).strip(), Help.action, Help.message
     for text in expected:
         assert text in output
 

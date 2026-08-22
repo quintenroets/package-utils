@@ -28,11 +28,16 @@ default_nested_options = NestedOptionsWithoutDefaults(
 )
 
 
+class Help:
+    action = "action help"
+    message = "message help"
+
+
 class Parameters:
-    action = Annotated[Action, typer.Argument(help="action help")]
+    action = Annotated[Action, typer.Argument(help=Help.action)]
     ignore_paths = Annotated[list[Path], typer.Argument()]
     optional_ignore_paths = Annotated[list[Path] | None, typer.Argument()]
-    message = Annotated[str, typer.Option("--message", "-m", help="message help")]
+    message = Annotated[str, typer.Option("--message", "-m", help=Help.message)]
 
 
 @dataclass

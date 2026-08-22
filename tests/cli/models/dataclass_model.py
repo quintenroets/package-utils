@@ -9,6 +9,8 @@ from superpathlib import Path
 @dataclass
 class NestedOptions:
     use_nesting: bool = False
+    message: Annotated[str, typer.Option("--declared-message", "-n")] = "nested"
+    force: Annotated[bool, typer.Option("--force/--no-force")] = False
 
 
 @dataclass(frozen=True)

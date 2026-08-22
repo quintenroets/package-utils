@@ -16,7 +16,12 @@ from tests.cli.models import (
     dataclass_model,
     dataclass_model_with_string_annotations,
 )
-from tests.cli.models.dataclass_model import Action, Options, Parameters
+from tests.cli.models.dataclass_model import (
+    Action,
+    NestedOptions,
+    Options,
+    Parameters,
+)
 
 
 def text_strategy() -> SearchStrategy[str]:
@@ -38,8 +43,7 @@ class_argument = pytest.mark.parametrize("class_", [*dataclasses, *normal_classe
 @no_cli_args
 @normal_class_argument
 def test_class_defaults(class_: type[Options]) -> None:
-    options = instantiate_from_cli_args(class_)
-    verify_defaults(options)
+    verify_defaults(instantiate_from_cli_args(class_))
 
 
 @no_cli_args
@@ -63,18 +67,14 @@ def verify_defaults(options: Options) -> None:
 
 @class_argument
 @given(debug=strategies.booleans())
-def test_debug_attribute(class_: type[Options], debug: bool) -> None:  # noqa: FBT001
-    option_string = "--debug" if debug else "--no-debug"
-    with cli_args(option_string):
-        options = instantiate_from_cli_args(class_)
-    assert options.debug is debug
+def test_flag_pair(class_: type[Options], *, debug: bool) -> None:
+    assert load_options(class_, flag("debug", enabled=debug)).debug is debug
 
 
 @class_argument
 def test_config_path(class_: type[Options]) -> None:
     config_path = Path.tempfile(create=False)
-    with cli_args("--config-path", config_path):
-        options = instantiate_from_cli_args(class_)
+    options = load_options(class_, "--config-path", config_path)
     assert options.config_path == config_path
     assert type(options.config_path) is Path
 
@@ -82,8 +82,7 @@ def test_config_path(class_: type[Options]) -> None:
 @class_argument
 def test_log_path(class_: type[Options]) -> None:
     log_path = Path.tempfile(create=False)
-    with cli_args("--log-path", log_path):
-        options = instantiate_from_cli_args(class_)
+    options = load_options(class_, "--log-path", log_path)
     assert options.log_path == log_path
     assert type(options.log_path) is Path
 
@@ -92,26 +91,20 @@ def test_log_path(class_: type[Options]) -> None:
 @pytest.mark.parametrize("option_string", ["--message", "-m"])
 @given(message=text_strategy())
 def test_message(class_: type[Options], option_string: str, message: str) -> None:
-    with cli_args(option_string, message):
-        options = instantiate_from_cli_args(class_)
-    assert options.message == message
+    assert load_options(class_, option_string, message).message == message
 
 
 @class_argument
 @given(message=text_strategy())
 def test_optional_message(class_: type[Options], message: str) -> None:
-    with cli_args("--optional-message", message):
-        options = instantiate_from_cli_args(class_)
+    options = load_options(class_, "--optional-message", message)
     assert options.optional_message == message
 
 
 @class_argument
 @given(verbosity=strategies.integers())
-def test_verbosity_attribute_not_exposed(class_: type[Options], verbosity: int) -> None:
-    test_args = cli_args("--verbosity", verbosity)
-    expect_exception = pytest.raises(NoSuchOption)
-    with test_args, expect_exception:
-        instantiate_from_cli_args(class_)
+def test_verbosity_not_exposed(class_: type[Options], verbosity: int) -> None:
+    assert_option_not_exposed(class_, "--verbosity", verbosity)
 
 
 @class_argument
@@ -131,51 +124,39 @@ def test_help(class_: type[Options], capsys: pytest.CaptureFixture[str]) -> None
 @class_argument
 @given(action=strategies.sampled_from(Action))
 def test_positional_argument(class_: type[Options], action: Action) -> None:
-    with cli_args(action.value):
-        options = instantiate_from_cli_args(class_)
-    assert options.action == action
+    assert load_options(class_, action.value).action == action
 
 
 @class_argument
 @given(action=strategies.sampled_from(Action))
-def test_positional_argument_no_option(class_: type[Options], action: Action) -> None:
-    test_args = cli_args("--action", action.value)
-    expect_exception = pytest.raises(NoSuchOption)
-    with test_args, expect_exception:
-        instantiate_from_cli_args(class_)
+def test_positional_option_not_exposed(class_: type[Options], action: Action) -> None:
+    assert_option_not_exposed(class_, "--action", action.value)
 
 
 @class_argument
 @given(action=strategies.sampled_from(Action))
 def test_enum(class_: type[Options], action: Action) -> None:
-    with cli_args("--action-on-error", action.value):
-        options = instantiate_from_cli_args(class_)
+    options = load_options(class_, "--action-on-error", action.value)
     assert options.action_on_error == action
 
 
 @dataclass_argument
 def test_working_directory(class_: type[Options]) -> None:
     path = Path.tempfile(create=False)
-    with cli_args("--working-directory", path):
-        options = instantiate_from_cli_args(class_)
-    assert options.working_directory == path
+    assert load_options(class_, "--working-directory", path).working_directory == path
 
 
 @class_argument
 @given(n_retries=strategies.integers())
 def test_type_conversion(class_: type[Options], n_retries: int) -> None:
-    with cli_args("--n-retries", n_retries):
-        options = instantiate_from_cli_args(class_)
-    assert options.n_retries == n_retries
+    assert load_options(class_, "--n-retries", n_retries).n_retries == n_retries
 
 
 @class_argument
 @given(messages=strategies.lists(text_strategy()))
 def test_list_option(class_: type[Options], messages: list[str]) -> None:
     args = [value for message in messages for value in ("--messages", message)]
-    with cli_args(*args):
-        options = instantiate_from_cli_args(class_)
-    assert options.messages == messages
+    assert load_options(class_, *args).messages == messages
 
 
 @class_argument
@@ -185,8 +166,7 @@ def test_list_argument(
     action: Action,
     paths: list[Path],
 ) -> None:
-    with cli_args(action.value, *paths):
-        options = instantiate_from_cli_args(class_)
+    options = load_options(class_, action.value, *paths)
     assert options.ignore_paths == paths
     for path in options.ignore_paths:
         assert type(path) is Path
@@ -194,13 +174,31 @@ def test_list_argument(
 
 @dataclass_argument
 @given(use_nesting=strategies.booleans())
-def test_nested_options(class_: type[Options], *, use_nesting: bool) -> None:
-    option_name = "nested-options-use-nesting"
-    option_string = f"--{option_name}" if use_nesting else f"--no-{option_name}"
-    with cli_args(option_string):
-        options = instantiate_from_cli_args(class_)
-    assert options.nested_options is not None
-    assert options.nested_options.use_nesting == use_nesting
+def test_derived_nested_flag_pair(class_: type[Options], *, use_nesting: bool) -> None:
+    option_string = flag("nested-options-use-nesting", enabled=use_nesting)
+    assert load_nested_options(class_, option_string).use_nesting is use_nesting
+
+
+@dataclass_argument
+@pytest.mark.parametrize("option_string", ["--declared-message", "-n"])
+@given(message=text_strategy())
+def test_declared_nested_option(
+    class_: type[Options],
+    option_string: str,
+    message: str,
+) -> None:
+    assert load_nested_options(class_, option_string, message).message == message
+
+
+@dataclass_argument
+@given(force=strategies.booleans())
+def test_declared_nested_flag_pair(class_: type[Options], *, force: bool) -> None:
+    assert load_nested_options(class_, flag("force", enabled=force)).force is force
+
+
+@dataclass_argument
+def test_prefixed_nested_option_not_exposed(class_: type[Options]) -> None:
+    assert_option_not_exposed(class_, "--nested-options-declared-message", "message")
 
 
 @class_argument
@@ -240,8 +238,7 @@ def test_combined_arguments(  # noqa: PLR0913, PLR0917
     args = [action.value, *paths, *option_arguments]
     for message_ in messages:
         args.extend(("--messages", message_))
-    with cli_args(*args):
-        options = instantiate_from_cli_args(class_)
+    options = load_options(class_, *args)
     assert options.action == action
     assert options.ignore_paths == paths
     assert options.action_on_error == action_on_error
@@ -252,6 +249,26 @@ def test_combined_arguments(  # noqa: PLR0913, PLR0917
     assert options.messages == messages
     assert options.optional_message == optional_message
     assert options.n_retries == n_retries
+
+
+def load_options(class_: type[Options], *args: object) -> Options:
+    with cli_args(*args):
+        return instantiate_from_cli_args(class_)
+
+
+def load_nested_options(class_: type[Options], *args: object) -> NestedOptions:
+    nested_options = load_options(class_, *args).nested_options
+    assert nested_options is not None
+    return nested_options
+
+
+def assert_option_not_exposed(class_: type[Options], *args: object) -> None:
+    with pytest.raises(NoSuchOption):
+        load_options(class_, *args)
+
+
+def flag(name: str, *, enabled: bool) -> str:
+    return f"--{name}" if enabled else f"--no-{name}"
 
 
 def generate_arguments(

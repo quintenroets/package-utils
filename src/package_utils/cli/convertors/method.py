@@ -20,7 +20,8 @@ class Convertor(Generic[T]):
         return self.object.__init__ if is_class else self.object  # type: ignore[return-value]
 
     def __post_init__(self) -> None:
-        self.annotations = typing.get_type_hints(self.annotated_method)
+        method = self.annotated_method
+        self.annotations = typing.get_type_hints(method, include_extras=True)
 
     def run(self) -> Method[T]:
         method = self.create_cli_entry_method()

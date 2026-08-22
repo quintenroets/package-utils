@@ -10,6 +10,7 @@ from .dataclass_model import (
     Action,
     NestedOptions,
     NestedOptionsWithoutDefaults,
+    Parameters,
     default_nested_options,
 )
 
@@ -27,7 +28,7 @@ class Options:
     config_path: Path = Path.draft
     log_path: Path | None = None
     verbosity: int = field(init=False)
-    message: str = "Hello World!"
+    message: Parameters.message = "Hello World!"
     messages: list[str] = field(default_factory=list)
     optional_message: str | None = "Hello World!"
     working_directory: Path = field(default_factory=Path.cwd)

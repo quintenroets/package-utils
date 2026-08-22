@@ -6,7 +6,7 @@ import typer
 from superpathlib import Path  # noqa: TC002
 
 from tests.cli.models import dataclass_model
-from tests.cli.models.dataclass_model import Action  # noqa: TC001
+from tests.cli.models.dataclass_model import Action, Parameters  # noqa: TC001
 
 
 class Options:
@@ -22,7 +22,7 @@ class Options:
         debug: bool = dataclass_model.Options.debug,  # noqa: FBT001
         config_path: Path = dataclass_model.Options.config_path,
         log_path: Path | None = dataclass_model.Options.log_path,
-        message: str = dataclass_model.Options.message,
+        message: Parameters.message = dataclass_model.Options.message,
         messages: list[str] | None = None,
         optional_message: str | None = dataclass_model.Options.optional_message,
         n_retries: int = 0,

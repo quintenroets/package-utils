@@ -23,10 +23,14 @@ def text_strategy() -> SearchStrategy[str]:
     return strategies.text(alphabet=alphabet)
 
 
+def path_strategy() -> SearchStrategy[Path]:
+    return strategies.builds(Path, text_strategy())
+
+
 normal_classes = [class_model.Options, class_model_with_string_annotations.Options]
 dataclasses = [dataclass_model.Options, dataclass_model_with_string_annotations.Options]
 dataclass_argument = pytest.mark.parametrize("class_", dataclasses)
-normal_class_argument = pytest.mark.parametrize("class_", dataclasses)
+normal_class_argument = pytest.mark.parametrize("class_", normal_classes)
 class_argument = pytest.mark.parametrize("class_", [*dataclasses, *normal_classes])
 
 
@@ -80,6 +84,7 @@ def test_log_path(class_: type[Options]) -> None:
     with cli_args("--log-path", log_path):
         options = instantiate_from_cli_args(class_)
     assert options.log_path == log_path
+    assert type(options.log_path) is Path
 
 
 @class_argument
@@ -170,15 +175,17 @@ def test_list_option(class_: type[Options], messages: list[str]) -> None:
 
 
 @class_argument
-@given(action=strategies.sampled_from(Action), paths=strategies.lists(text_strategy()))
+@given(action=strategies.sampled_from(Action), paths=strategies.lists(path_strategy()))
 def test_list_argument(
     class_: type[Options],
     action: Action,
-    paths: tuple[str],
+    paths: list[Path],
 ) -> None:
     with cli_args(action.value, *paths):
         options = instantiate_from_cli_args(class_)
-    assert options.ignore_paths == [Path(path) for path in paths]
+    assert options.ignore_paths == paths
+    for path in options.ignore_paths:
+        assert type(path) is Path
 
 
 @dataclass_argument
@@ -195,7 +202,7 @@ def test_nested_options(class_: type[Options], *, use_nesting: bool) -> None:
 @class_argument
 @given(
     action=strategies.sampled_from(Action),
-    paths=strategies.lists(text_strategy()),
+    paths=strategies.lists(path_strategy()),
     action_on_error=strategies.sampled_from(Action),
     debug=strategies.booleans(),
     message=text_strategy(),
@@ -206,7 +213,7 @@ def test_nested_options(class_: type[Options], *, use_nesting: bool) -> None:
 def test_combined_arguments(  # noqa: PLR0913, PLR0917
     class_: type[Options],
     action: Action,
-    paths: list[str],
+    paths: list[Path],
     action_on_error: Action,
     debug: bool,  # noqa: FBT001
     message: str,
@@ -232,7 +239,7 @@ def test_combined_arguments(  # noqa: PLR0913, PLR0917
     with cli_args(*args):
         options = instantiate_from_cli_args(class_)
     assert options.action == action
-    assert options.ignore_paths == [Path(path) for path in paths]
+    assert options.ignore_paths == paths
     assert options.action_on_error == action_on_error
     assert options.debug == debug
     assert options.config_path == options_dict["config-path"]

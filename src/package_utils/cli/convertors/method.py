@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from inspect import Parameter, Signature, signature
 from typing import Any, Generic, TypeVar
 
-from .parameter import convert
+from .parameter import convert, typer_namespace
 
 T = TypeVar("T")
 Method = Callable[..., T]
@@ -31,4 +31,5 @@ class Convertor(Generic[T]):
         return self.object(**kwargs)
 
     def extract_parameters(self) -> Iterator[Parameter]:
-        yield from signature(self.object, eval_str=True).parameters.values()
+        signature_ = signature(self.object, eval_str=True, locals=typer_namespace)
+        yield from signature_.parameters.values()

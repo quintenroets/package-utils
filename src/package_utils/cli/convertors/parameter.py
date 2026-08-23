@@ -9,6 +9,8 @@ from typing import Annotated, Any
 import typer
 from typer.models import ParameterInfo
 
+typer_namespace = {"typer": typer}
+
 
 def convert(parameter: Parameter) -> Parameter:
     type_ = resolve_type(parameter)

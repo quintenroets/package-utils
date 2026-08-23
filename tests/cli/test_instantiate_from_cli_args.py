@@ -15,7 +15,8 @@ from tests.cli.models import (
     dataclass_model,
     dataclass_model_with_string_annotations,
 )
-from tests.cli.models.dataclass_model import Action, Help, NestedOptions, Options
+from tests.cli.models.dataclass_model import Action, NestedOptions, Options
+from tests.cli.models.help_messages import Help
 
 
 def text_strategy() -> SearchStrategy[str]:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from inspect import signature
 from typing import TYPE_CHECKING
 
 import pytest
@@ -83,3 +84,10 @@ def test_docstring(
 
         captured = capsys.readouterr()
         assert str(method.__doc__).strip() in captured.out
+
+
+@no_cli_args
+def test_original_signature_preserved() -> None:
+    original = signature(run_with_arguments)
+    create_entry_point(run_with_arguments)()
+    assert signature(run_with_arguments) == original

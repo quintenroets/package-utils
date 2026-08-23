@@ -1,7 +1,8 @@
+import functools
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from inspect import Parameter, Signature, signature
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from .parameter import convert
 
@@ -20,7 +21,14 @@ class Convertor(Generic[T]):
         return method
 
     def create_cli_entry_method(self) -> Method[T]:
-        return self.object
+        @functools.wraps(self.object, assigned=("__doc__",), updated=())
+        def entry_method(**kwargs: Any) -> T:
+            return self.call(**kwargs)
+
+        return entry_method
+
+    def call(self, **kwargs: Any) -> T:
+        return self.object(**kwargs)
 
     def extract_parameters(self) -> Iterator[Parameter]:
         yield from signature(self.object, eval_str=True).parameters.values()

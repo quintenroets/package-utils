@@ -6,7 +6,7 @@ from inspect import Parameter
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from . import method
-from .parameter import extract_types, resolve_type
+from .parameter import extract_types, resolve_type, typer_namespace
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance  # pragma: nocover
@@ -31,7 +31,7 @@ class Convertor(method.Convertor[T]):
             import dacite  # noqa: PLC0415
 
             self.unflatten(specified_kwargs)
-            config = dacite.Config(strict=True)
+            config = dacite.Config(strict=True, forward_references=typer_namespace)
             result = dacite.from_dict(self.object, specified_kwargs, config=config)
         else:
             result = self.object(**specified_kwargs)

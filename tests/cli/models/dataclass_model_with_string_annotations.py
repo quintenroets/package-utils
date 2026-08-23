@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Annotated
 
 from superpathlib import Path
 
@@ -8,9 +9,12 @@ from .dataclass_model import (
     Action,
     NestedOptions,
     NestedOptionsWithoutDefaults,
-    Parameters,
     default_nested_options,
 )
+from .help_messages import Help
+
+if TYPE_CHECKING:
+    import typer  # pragma: nocover
 
 
 @dataclass
@@ -19,14 +23,16 @@ class Options:
     Options.
     """
 
-    action: Parameters.action = Action.show
-    ignore_paths: Parameters.ignore_paths = field(default_factory=list)
+    action: Annotated[Action, typer.Argument(help=Help.action)] = Action.show
+    ignore_paths: Annotated[list[Path], typer.Argument()] = field(default_factory=list)
     action_on_error: Action = Action.show
     debug: bool = False
     config_path: Path = Path.draft
     log_path: Path | None = None
     verbosity: int = field(init=False)
-    message: Parameters.message = "Hello World!"
+    message: Annotated[str, typer.Option("--message", "-m", help=Help.message)] = (
+        "Hello World!"
+    )
     messages: list[str] = field(default_factory=list)
     optional_message: str | None = "Hello World!"
     working_directory: Path = field(default_factory=Path.cwd)

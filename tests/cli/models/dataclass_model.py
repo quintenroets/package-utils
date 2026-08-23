@@ -5,6 +5,8 @@ from typing import Annotated
 import typer
 from superpathlib import Path
 
+from .help_messages import Help
+
 
 @dataclass
 class NestedOptions:
@@ -26,11 +28,6 @@ class Action(Enum):
 default_nested_options = NestedOptionsWithoutDefaults(
     use_nesting=False,
 )
-
-
-class Help:
-    action = "action help"
-    message = "message help"
 
 
 class Parameters:

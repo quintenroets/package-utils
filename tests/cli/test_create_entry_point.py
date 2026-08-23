@@ -87,7 +87,7 @@ def test_docstring(
 
 
 @no_cli_args
-def test_original_method_not_mutated() -> None:
+def test_original_signature_preserved() -> None:
     original = signature(run_with_arguments)
     create_entry_point(run_with_arguments)()
     assert signature(run_with_arguments) == original

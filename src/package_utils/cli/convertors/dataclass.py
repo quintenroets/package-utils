@@ -1,7 +1,6 @@
 import dataclasses
-import functools
 import typing
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from inspect import Parameter
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -26,21 +25,17 @@ class Convertor(method.Convertor[T]):
     name_prefix: str = ""
     argument_prefixes: dict[str, str] = field(default_factory=dict)
 
-    def create_cli_entry_method(self) -> Callable[..., T]:
-        @functools.wraps(self.object, assigned=("__doc__",), updated=())
-        def wrapped_method(**kwargs: Any) -> Any:
-            specified_kwargs = {k: v for k, v in kwargs.items() if v is not None}
-            if self.argument_prefixes:
-                import dacite  # noqa: PLC0415
+    def call(self, **kwargs: Any) -> T:
+        specified_kwargs = {k: v for k, v in kwargs.items() if v is not None}
+        if self.argument_prefixes:
+            import dacite  # noqa: PLC0415
 
-                self.unflatten(specified_kwargs)
-                config = dacite.Config(strict=True)
-                result = dacite.from_dict(self.object, specified_kwargs, config=config)
-            else:
-                result = self.object(**specified_kwargs)
-            return result
-
-        return typing.cast("Callable[..., T]", wrapped_method)
+            self.unflatten(specified_kwargs)
+            config = dacite.Config(strict=True)
+            result = dacite.from_dict(self.object, specified_kwargs, config=config)
+        else:
+            result = self.object(**specified_kwargs)
+        return result
 
     def unflatten(self, items: dict[str, Any]) -> None:
         while flattened_names := items.keys() & self.argument_prefixes.keys():

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from superpathlib import Path
 
@@ -35,6 +35,8 @@ class Options:
     )
     messages: list[str] = field(default_factory=list)
     optional_message: str | None = "Hello World!"
+    mode: Literal["read", "write"] = "read"
+    path_pair: tuple[Path, Path] = (Path.draft, Path.draft)
     working_directory: Path = field(default_factory=Path.cwd)
     n_retries: int = 0
     nested_options: NestedOptions | None = None

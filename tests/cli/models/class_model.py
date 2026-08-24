@@ -1,3 +1,5 @@
+from typing import Literal
+
 from superpathlib import Path
 
 from tests.cli.models import dataclass_model
@@ -20,6 +22,8 @@ class Options:
         message: Parameters.message = dataclass_model.Options.message,
         messages: list[str] | None = None,
         optional_message: str | None = dataclass_model.Options.optional_message,
+        mode: Literal["read", "write"] = dataclass_model.Options.mode,
+        path_pair: tuple[Path, Path] = dataclass_model.Options.path_pair,
         n_retries: int = 0,
     ) -> None:
         self.action = action
@@ -32,4 +36,6 @@ class Options:
         self.message = message
         self.messages = [] if messages is None else messages
         self.optional_message = optional_message
+        self.mode = mode
+        self.path_pair = path_pair
         self.n_retries = n_retries

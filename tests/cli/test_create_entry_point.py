@@ -100,9 +100,8 @@ def test_docstring(
             entry_point()
         assert exception.value.code == 0
 
-        captured = capsys.readouterr()
         assert method.__doc__ is not None
-        assert method.__doc__.strip() in captured.out
+        assert method.__doc__.strip() in capsys.readouterr().out
 
 
 @cli_args("--help")

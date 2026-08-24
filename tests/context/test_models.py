@@ -6,9 +6,7 @@ import pytest
 from package_utils.context import Context
 from package_utils.context.loaders.secrets_ import SecretLoader
 from tests.context.models import options_normal_class
-from tests.context.models.config import Config
-from tests.context.models.options import Options
-from tests.context.models.secrets_ import Secrets
+from tests.context.models.models import Config, Options, Secrets
 
 ABSENT_NAME = "my_nonexistent_secret_xyz"
 

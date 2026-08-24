@@ -10,9 +10,7 @@ import pytest
 from superpathlib import Path
 
 from package_utils.context import Context as Context_
-from tests.context.models.config import Config
-from tests.context.models.options import Options
-from tests.context.models.secrets_ import Secrets
+from tests.context.models.models import Config, Options, Secrets
 
 NestedDict = dict[str, str | dict[str, str]]
 

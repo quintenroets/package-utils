@@ -14,6 +14,7 @@ from tests.cli.models import (
     class_model_with_string_annotations,
     dataclass_model,
     dataclass_model_with_string_annotations,
+    unsupported_annotations,
 )
 from tests.cli.models.dataclass_model import Action, NestedOptions, Options
 from tests.cli.models.help_messages import Help
@@ -94,6 +95,21 @@ def test_message(class_: type[Options], option_string: str, message: str) -> Non
 def test_optional_message(class_: type[Options], message: str) -> None:
     options = load_options(class_, "--optional-message", message)
     assert options.optional_message == message
+
+
+@class_argument
+@given(mode=strategies.sampled_from(["read", "write"]))
+def test_literal(class_: type[Options], mode: str) -> None:
+    assert load_options(class_, "--mode", mode).mode == mode
+
+
+@class_argument
+@given(path_pair=strategies.tuples(path_strategy(), path_strategy()))
+def test_path_pair(class_: type[Options], path_pair: tuple[Path, Path]) -> None:
+    options = load_options(class_, "--path-pair", *path_pair)
+    assert options.path_pair == path_pair
+    for path in options.path_pair:
+        assert type(path) is Path
 
 
 @class_argument
@@ -192,6 +208,20 @@ def test_declared_nested_flag_pair(class_: type[Options], *, force: bool) -> Non
 @dataclass_argument
 def test_prefixed_nested_option_not_exposed(class_: type[Options]) -> None:
     assert_option_not_exposed(class_, "--nested-options-declared-message", "message")
+
+
+@no_cli_args
+@pytest.mark.parametrize(
+    "class_",
+    [
+        unsupported_annotations.VariableLengthTuple,
+        unsupported_annotations.Dictionary,
+        unsupported_annotations.Function,
+    ],
+)
+def test_unsupported_annotation_rejected(class_: type) -> None:
+    with pytest.raises(RuntimeError):
+        instantiate_from_cli_args(class_)
 
 
 @class_argument

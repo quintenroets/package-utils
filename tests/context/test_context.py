@@ -10,17 +10,20 @@ import pytest
 from superpathlib import Path
 
 from package_utils.context import Context as Context_
-from tests.context.models.models import Config, Options, Secrets
+from tests.context.models import models, models_with_string_annotations
 
 NestedDict = dict[str, str | dict[str, str]]
 
 
-Context = Context_[Options, Config, Secrets]
+Context = Context_[models.Options, models.Config, models.Secrets]
 
 
-@pytest.fixture
-def context() -> Context:
-    return Context(Options, Config, Secrets)
+@pytest.fixture(
+    params=(models, models_with_string_annotations),
+    ids=("resolved", "string_annotations"),
+)
+def context(request: pytest.FixtureRequest) -> Context:
+    return Context(request.param.Options, request.param.Config, request.param.Secrets)
 
 
 @contextmanager

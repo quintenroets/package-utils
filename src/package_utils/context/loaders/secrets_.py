@@ -6,7 +6,7 @@ import shlex
 import subprocess
 import typing
 from dataclasses import dataclass, fields, is_dataclass
-from typing import Generic, TypeVar, cast
+from typing import Generic, TypeVar, cast, get_type_hints
 
 import dacite
 
@@ -69,16 +69,18 @@ class Loader(options.Loader[Secrets], Generic[Options, Config, Secrets]):
 
     def add_defaults(
         self,
-        class_type: DataclassInstance | type[DataclassInstance],
+        class_type: type[DataclassInstance],
         parent_name: str = "",
     ) -> None:
+        type_hints = get_type_hints(class_type)
         for field in fields(class_type):
             name = field.name
             full_name = f"{parent_name}{self.delimiter}{name}" if parent_name else name
             if field.default_factory == dataclasses.MISSING:
-                if is_dataclass(field.type):
-                    self.add_defaults(field.type, full_name)
-                    type_ = cast("type[DataclassInstance]", field.type)
-                    field.default_factory = DataclassLoader(type_).load
+                type_ = type_hints[name]
+                if is_dataclass(type_):
+                    nested_class = cast("type[DataclassInstance]", type_)
+                    self.add_defaults(nested_class, full_name)
+                    field.default_factory = DataclassLoader(nested_class).load
                 else:
                     field.default_factory = SecretLoader(full_name).load

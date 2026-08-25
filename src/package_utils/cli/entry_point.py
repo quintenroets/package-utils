@@ -33,6 +33,6 @@ class EntryPoint(Generic[T]):
                 self.argument_class.__doc__ = method_doc
 
     def extract_argument_class(self) -> None:
-        argument_class = next(first_parameter_types(self.method), None)
-        if is_dataclass(argument_class):
-            self.argument_class = argument_class
+        types = first_parameter_types(self.method)
+        classes = (type_ for type_ in types if is_dataclass(type_))
+        self.argument_class = next(classes, None)

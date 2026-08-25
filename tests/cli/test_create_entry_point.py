@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from inspect import signature
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, cast
 
 import pytest
 from package_dev_utils.tests.args import cli_args, no_cli_args
@@ -43,6 +43,10 @@ def run_undocumented(options: dataclass_model.Options) -> str | None:
     return run_with_arguments(debug=options.debug, message=options.message)
 
 
+def run_union(options: int | Options) -> str | None:
+    return run(cast("Options", options))
+
+
 class Options(dataclass_model.Options):
     def run(self: Options) -> str | None:
         """
@@ -55,7 +59,7 @@ class Options(dataclass_model.Options):
 def methods(
     documented_methods: tuple[Callable[..., str | None], ...],
 ) -> tuple[Callable[..., str | None], ...]:
-    return (*documented_methods, run_undocumented)
+    return (*documented_methods, run_undocumented, run_union)
 
 
 @pytest.fixture

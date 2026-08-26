@@ -1,13 +1,14 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from types import NoneType, SimpleNamespace
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal, Optional, TypeVar
 
 import pytest
 
 from package_utils.annotations import base_types_of, first_parameter_types
 
 type_alias = SimpleNamespace(__value__=list[int])
+T = TypeVar("T")
 
 
 @dataclass
@@ -28,6 +29,9 @@ def unannotated_first_parameter(options, name: str) -> None:  # type: ignore[no-
     ...
 
 
+def type_variable_parameter(options: T) -> None: ...
+
+
 @pytest.mark.parametrize(
     ("annotation", "base_types"),
     [
@@ -43,6 +47,10 @@ def unannotated_first_parameter(options, name: str) -> None:  # type: ignore[no-
         (Literal[1, "a"], [int, str]),
         (Literal["a"] | None, [str]),
         (Annotated[Literal[1], "metadata"], [int]),
+        (T, []),
+        (None, []),
+        (SimpleNamespace(__value__=None), []),
+        ("int", []),
     ],
 )
 def test_base_types_of(annotation: object, base_types: list[type]) -> None:
@@ -56,6 +64,7 @@ def test_base_types_of(annotation: object, base_types: list[type]) -> None:
         (optional_parameter, [Options]),
         (no_parameters, []),
         (unannotated_first_parameter, []),
+        (type_variable_parameter, []),
     ],
 )
 def test_first_parameter_types(

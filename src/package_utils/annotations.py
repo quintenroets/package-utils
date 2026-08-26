@@ -18,9 +18,7 @@ if TYPE_CHECKING:
 
 
 def first_parameter_types(method: Callable[..., Any]) -> Iterator[type]:
-    annotation = first_parameter_annotation(method)
-    if annotation is not None:
-        yield from base_types_of(annotation)
+    return base_types_of(first_parameter_annotation(method))
 
 
 def first_parameter_annotation(method: Callable[..., Any]) -> object | None:
@@ -42,6 +40,5 @@ def base_types_of(annotation: object) -> Iterator[type]:
             yield type(argument)
     elif isinstance(resolved_annotation, type):
         yield resolved_annotation
-    else:
-        type_alias: Any = resolved_annotation
-        yield from base_types_of(type_alias.__value__)
+    elif hasattr(resolved_annotation, "__value__"):
+        yield from base_types_of(resolved_annotation.__value__)

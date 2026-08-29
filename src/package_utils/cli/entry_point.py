@@ -1,11 +1,14 @@
 import inspect
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass, is_dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, cast
+
+import typer
 
 from package_utils.annotations import first_parameter_types
 
-from .cli_runner import Runner
+from . import convertors
 
 T = TypeVar("T")
 
@@ -18,9 +21,9 @@ class EntryPoint(Generic[T]):
     def __call__(self) -> T:
         self.setup_argument_class()
         if self.argument_class is None:
-            result = Runner(self.method).run_with_cli_args()
+            result = run_with_cli_args(self.method)
         else:
-            instance = Runner(self.argument_class).run_with_cli_args()
+            instance = run_with_cli_args(self.argument_class)
             result = self.method(instance)
         return result
 
@@ -36,3 +39,15 @@ class EntryPoint(Generic[T]):
         types = first_parameter_types(self.method)
         classes = (type_ for type_ in types if is_dataclass(type_))
         self.argument_class = next(classes, None)
+
+
+def run_with_cli_args(object_: Callable[..., T] | type[T]) -> T:
+    is_dataclass_ = is_dataclass(object_)
+    module = convertors.dataclass if is_dataclass_ else convertors.method
+    cli_entry_method = module.Convertor(object_).run()
+    app = typer.Typer(add_completion=False)
+    app.command()(cli_entry_method)
+    result_or_exit_code = app(standalone_mode=False)
+    if isinstance(result_or_exit_code, int):
+        sys.exit(result_or_exit_code)
+    return cast("T", result_or_exit_code)

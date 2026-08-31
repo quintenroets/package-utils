@@ -1,4 +1,3 @@
-import inspect
 import sys
 from collections.abc import Callable
 from dataclasses import is_dataclass
@@ -20,6 +19,12 @@ def create_entry_point(
     return partial(run_entry_point, method, argument_class)
 
 
+def instantiate_from_cli_args(class_: type[T], documented_object: object = None) -> T:
+    if documented_object is not None:
+        class_.__doc__ = documented_object.__doc__
+    return run_with_cli_args(class_)
+
+
 def run_entry_point(method: Callable[..., T], argument_class: type[Any] | None) -> T:
     if argument_class is None:
         argument_class = extract_argument_class(method)
@@ -33,7 +38,7 @@ def run_entry_point(method: Callable[..., T], argument_class: type[Any] | None) 
 
 
 def extract_argument_class(method: Callable[..., Any]) -> type[Any] | None:
-    types = first_parameter_types(method) if inspect.isfunction(method) else ()
+    types = first_parameter_types(method)
     return next((type_ for type_ in types if is_dataclass(type_)), None)
 
 

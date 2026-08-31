@@ -1,8 +1,9 @@
 import inspect
 import sys
 from collections.abc import Callable
-from dataclasses import dataclass, is_dataclass
-from typing import Any, Generic, TypeVar, cast
+from dataclasses import is_dataclass
+from functools import partial
+from typing import Any, TypeVar, cast
 
 import typer
 
@@ -13,32 +14,27 @@ from . import convertors
 T = TypeVar("T")
 
 
-@dataclass
-class EntryPoint(Generic[T]):
-    method: Callable[..., T]
-    argument_class: type[Any] | None = None
+def create_entry_point(
+    method: Callable[..., T], argument_class: type[Any] | None = None
+) -> Callable[[], T]:
+    return partial(run_entry_point, method, argument_class)
 
-    def __call__(self) -> T:
-        self.setup_argument_class()
-        if self.argument_class is None:
-            result = run_with_cli_args(self.method)
-        else:
-            instance = run_with_cli_args(self.argument_class)
-            result = self.method(instance)
-        return result
 
-    def setup_argument_class(self) -> None:
-        if self.argument_class is None and inspect.isfunction(self.method):
-            self.extract_argument_class()
-        if self.argument_class is not None:
-            method_doc = self.method.__doc__
-            if method_doc is not None:
-                self.argument_class.__doc__ = method_doc
+def run_entry_point(method: Callable[..., T], argument_class: type[Any] | None) -> T:
+    if argument_class is None:
+        argument_class = extract_argument_class(method)
+    if argument_class is not None and method.__doc__ is not None:
+        argument_class.__doc__ = method.__doc__
+    return (
+        run_with_cli_args(method)
+        if argument_class is None
+        else method(run_with_cli_args(argument_class))
+    )
 
-    def extract_argument_class(self) -> None:
-        types = first_parameter_types(self.method)
-        classes = (type_ for type_ in types if is_dataclass(type_))
-        self.argument_class = next(classes, None)
+
+def extract_argument_class(method: Callable[..., Any]) -> type[Any] | None:
+    types = first_parameter_types(method) if inspect.isfunction(method) else ()
+    return next((type_ for type_ in types if is_dataclass(type_)), None)
 
 
 def run_with_cli_args(object_: Callable[..., T] | type[T]) -> T:

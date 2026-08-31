@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from .entry_point import EntryPoint as create_entry_point  # noqa: N813
+from .entry_point import create_entry_point
 
 T = TypeVar("T")
 

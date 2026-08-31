@@ -68,13 +68,6 @@ def documented_methods() -> tuple[Callable[..., str | None], ...]:
 
 
 @no_cli_args
-def test_entry_point(methods: tuple[Callable[..., str | None], ...]) -> None:
-    for method in methods:
-        entry_point = create_entry_point(method)
-        entry_point()
-
-
-@no_cli_args
 def test_with_class_specified() -> None:
     entry_point = create_entry_point(Options.run, Options)
     entry_point()

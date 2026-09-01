@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 from tests.cli.models import dataclass_model
 
 
-def run_with_arguments(*, message: str = dataclass_model.Options.message) -> str:
+def run_with_arguments(message: str = dataclass_model.Options.message) -> str:
     """
     Method with arguments.
     """
@@ -25,22 +25,22 @@ def run(options: Options) -> str:
     """
     Normal method.
     """
-    return run_with_arguments(message=options.message)
+    return options.message
 
 
 def run_annotated(options: Annotated[Options, "metadata"]) -> str:
     """
     Method with annotated options.
     """
-    return run(options)
+    return options.message
 
 
 def run_undocumented(options: dataclass_model.Options) -> str:
-    return run_with_arguments(message=options.message)
+    return options.message
 
 
 def run_union(options: int | Options) -> str:
-    return run(cast("Options", options))
+    return cast("Options", options).message
 
 
 class Options(dataclass_model.Options):
@@ -48,7 +48,7 @@ class Options(dataclass_model.Options):
         """
         Instance method.
         """
-        return run(self)
+        return self.message
 
 
 @pytest.fixture

@@ -14,41 +14,37 @@ if TYPE_CHECKING:
 from tests.cli.models import dataclass_model
 
 
-def run_with_arguments(
-    *,
-    debug: bool = False,
-    message: str = dataclass_model.Options.message,
-) -> str | None:
+def run_with_arguments(*, message: str = dataclass_model.Options.message) -> str:
     """
     Method with arguments.
     """
-    return message if debug else None
+    return message
 
 
-def run(options: Options) -> str | None:
+def run(options: Options) -> str:
     """
     Normal method.
     """
-    return run_with_arguments(debug=options.debug, message=options.message)
+    return run_with_arguments(message=options.message)
 
 
-def run_annotated(options: Annotated[Options, "metadata"]) -> str | None:
+def run_annotated(options: Annotated[Options, "metadata"]) -> str:
     """
     Method with annotated options.
     """
     return run(options)
 
 
-def run_undocumented(options: dataclass_model.Options) -> str | None:
-    return run_with_arguments(debug=options.debug, message=options.message)
+def run_undocumented(options: dataclass_model.Options) -> str:
+    return run_with_arguments(message=options.message)
 
 
-def run_union(options: int | Options) -> str | None:
+def run_union(options: int | Options) -> str:
     return run(cast("Options", options))
 
 
 class Options(dataclass_model.Options):
-    def run(self: Options) -> str | None:
+    def run(self: Options) -> str:
         """
         Instance method.
         """
@@ -57,13 +53,13 @@ class Options(dataclass_model.Options):
 
 @pytest.fixture
 def methods(
-    documented_methods: tuple[Callable[..., str | None], ...],
-) -> tuple[Callable[..., str | None], ...]:
+    documented_methods: tuple[Callable[..., str], ...],
+) -> tuple[Callable[..., str], ...]:
     return (*documented_methods, run_undocumented, run_union)
 
 
 @pytest.fixture
-def documented_methods() -> tuple[Callable[..., str | None], ...]:
+def documented_methods() -> tuple[Callable[..., str], ...]:
     return run_with_arguments, run, run_annotated, Options.run
 
 
@@ -73,22 +69,18 @@ def test_with_class_specified() -> None:
     entry_point()
 
 
-def test_option(methods: tuple[Callable[..., str | None], ...]) -> None:
+def test_option(methods: tuple[Callable[..., str], ...]) -> None:
     with no_cli_args:
         for method in methods:
-            entry_point = create_entry_point(method)
-            result = entry_point()
-            assert result is None
-    with cli_args("--debug"):
+            assert create_entry_point(method)() == Options.message
+    with cli_args("--message", "custom"):
         for method in methods:
-            entry_point = create_entry_point(method)
-            result = entry_point()
-            assert result == Options.message
+            assert create_entry_point(method)() == "custom"
 
 
 @cli_args("--help")
 def test_docstring(
-    documented_methods: tuple[Callable[..., str | None], ...],
+    documented_methods: tuple[Callable[..., str], ...],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     for method in documented_methods:

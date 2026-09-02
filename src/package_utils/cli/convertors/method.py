@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from inspect import Parameter, Signature, signature
 from typing import Any, Generic, TypeVar
 
+from package_utils.cli.return_value import ReturnValue
+
 from .parameter import convert, typer_namespace
 
 T = TypeVar("T")
@@ -13,10 +15,10 @@ T = TypeVar("T")
 class Convertor(Generic[T]):
     object: Callable[..., T]
 
-    def create_command(self) -> Callable[..., T]:
+    def create_command(self) -> Callable[..., ReturnValue[T]]:
         @functools.wraps(self.object, assigned=("__doc__",), updated=())
-        def command(**kwargs: Any) -> T:
-            return self.call(**kwargs)
+        def command(**kwargs: Any) -> ReturnValue[T]:
+            return ReturnValue(self.call(**kwargs))
 
         parameters = [convert(parameter) for parameter in self.extract_parameters()]
         command.__signature__ = Signature(parameters=parameters)  # type: ignore[attr-defined]

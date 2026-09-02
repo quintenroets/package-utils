@@ -8,10 +8,10 @@ from tests.context.models.models import Config, Options, Secrets
 
 
 @no_cli_args
-def test_entry_point() -> None:
+def test_discarded_result() -> None:
     context = Context(Options, Config, Secrets)
-    entry_point = create_entry_point(lambda: None, context, lambda _: None)
-    entry_point()
+    entry_point = create_entry_point(lambda: 1, context, lambda _: None)
+    assert entry_point() is None
 
 
 @given(debug=strategies.booleans())

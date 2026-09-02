@@ -45,9 +45,9 @@ def extract_argument_class(method: Callable[..., Any]) -> type[Any] | None:
 def run_with_cli_args(object_: Callable[..., T] | type[T]) -> T:
     is_dataclass_ = is_dataclass(object_)
     module = convertors.dataclass if is_dataclass_ else convertors.method
-    cli_entry_method = module.Convertor(object_).run()
+    command = module.Convertor(object_).create_command()
     app = typer.Typer(add_completion=False)
-    app.command()(cli_entry_method)
+    app.command()(command)
     result_or_exit_code = app(standalone_mode=False)
     if isinstance(result_or_exit_code, int):
         sys.exit(result_or_exit_code)

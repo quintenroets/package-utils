@@ -14,18 +14,18 @@ if TYPE_CHECKING:
 from tests.cli.models import dataclass_model
 
 
-def run_with_arguments(message: str = dataclass_model.Options.message) -> str:
-    """
-    Method with arguments.
-    """
-    return message
-
-
 def run(options: Options) -> str:
     """
     Normal method.
     """
     return options.message
+
+
+def run_with_arguments(message: str = dataclass_model.Options.message) -> str:
+    """
+    Method with arguments.
+    """
+    return message
 
 
 def run_annotated(options: Annotated[Options, "metadata"]) -> str:
@@ -52,15 +52,22 @@ class Options(dataclass_model.Options):
 
 
 @pytest.fixture
-def methods(
-    documented_methods: tuple[Callable[..., str], ...],
-) -> tuple[Callable[..., str], ...]:
-    return (*documented_methods, run_undocumented, run_union)
+def methods() -> tuple[Callable[..., str], ...]:
+    return (
+        run,
+        run_with_arguments,
+        run_annotated,
+        run_undocumented,
+        run_union,
+        Options.run,
+    )
 
 
 @pytest.fixture
-def documented_methods() -> tuple[Callable[..., str], ...]:
-    return run_with_arguments, run, run_annotated, Options.run
+def documented_methods(
+    methods: tuple[Callable[..., str], ...],
+) -> tuple[Callable[..., str], ...]:
+    return tuple(method for method in methods if method.__doc__)
 
 
 @no_cli_args

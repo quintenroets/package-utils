@@ -2,7 +2,7 @@ import sys
 from collections.abc import Callable
 from dataclasses import is_dataclass
 from functools import partial
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import typer
 
@@ -10,12 +10,15 @@ from package_utils.annotations import first_parameter_types
 
 from . import convertors
 
+if TYPE_CHECKING:
+    from .return_value import ReturnValue
+
 T = TypeVar("T")
 
 
 def create_entry_point(
-    method: Callable[..., T], argument_class: type[Any] | None = None
-) -> Callable[[], T]:
+    method: Callable[..., object], argument_class: type[Any] | None = None
+) -> Callable[[], None]:
     return partial(run_entry_point, method, argument_class)
 
 
@@ -25,16 +28,17 @@ def instantiate_from_cli_args(class_: type[T], documented_object: object = None)
     return run_with_cli_args(class_)
 
 
-def run_entry_point(method: Callable[..., T], argument_class: type[Any] | None) -> T:
+def run_entry_point(
+    method: Callable[..., object], argument_class: type[Any] | None
+) -> None:
     if argument_class is None:
         argument_class = extract_argument_class(method)
     if argument_class is not None and method.__doc__ is not None:
         argument_class.__doc__ = method.__doc__
-    return (
+    if argument_class is None:
         run_with_cli_args(method)
-        if argument_class is None
-        else method(run_with_cli_args(argument_class))
-    )
+    else:
+        method(run_with_cli_args(argument_class))
 
 
 def extract_argument_class(method: Callable[..., Any]) -> type[Any] | None:
@@ -43,12 +47,11 @@ def extract_argument_class(method: Callable[..., Any]) -> type[Any] | None:
 
 
 def run_with_cli_args(object_: Callable[..., T] | type[T]) -> T:
-    is_dataclass_ = is_dataclass(object_)
-    module = convertors.dataclass if is_dataclass_ else convertors.method
+    module = convertors.dataclass if is_dataclass(object_) else convertors.method
     command = module.Convertor(object_).create_command()
     app = typer.Typer(add_completion=False)
     app.command()(command)
-    result_or_exit_code = app(standalone_mode=False)
-    if isinstance(result_or_exit_code, int):
-        sys.exit(result_or_exit_code)
-    return cast("T", result_or_exit_code)
+    result: ReturnValue[T] | int = app(standalone_mode=False)
+    if isinstance(result, int):
+        sys.exit(result)
+    return result.value

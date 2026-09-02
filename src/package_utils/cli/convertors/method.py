@@ -7,25 +7,20 @@ from typing import Any, Generic, TypeVar
 from .parameter import convert, typer_namespace
 
 T = TypeVar("T")
-Method = Callable[..., T]
 
 
 @dataclass
 class Convertor(Generic[T]):
-    object: Method[T]
+    object: Callable[..., T]
 
-    def run(self) -> Method[T]:
-        method = self.create_cli_entry_method()
-        parameters = [convert(parameter) for parameter in self.extract_parameters()]
-        method.__signature__ = Signature(parameters=parameters)  # type: ignore[attr-defined]
-        return method
-
-    def create_cli_entry_method(self) -> Method[T]:
+    def create_command(self) -> Callable[..., T]:
         @functools.wraps(self.object, assigned=("__doc__",), updated=())
-        def entry_method(**kwargs: Any) -> T:
+        def command(**kwargs: Any) -> T:
             return self.call(**kwargs)
 
-        return entry_method
+        parameters = [convert(parameter) for parameter in self.extract_parameters()]
+        command.__signature__ = Signature(parameters=parameters)  # type: ignore[attr-defined]
+        return command
 
     def call(self, **kwargs: Any) -> T:
         return self.object(**kwargs)

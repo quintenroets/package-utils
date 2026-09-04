@@ -9,10 +9,27 @@ from .help_messages import Help
 
 
 @dataclass
+class InnermostOptions:
+    depth: int = 3
+
+
+@dataclass
+class InnerOptions:
+    depth: int = 2
+    innermost: InnermostOptions | None = None
+
+
+@dataclass
 class NestedOptions:
     use_nesting: bool = False
     message: Annotated[str, typer.Option("--declared-message", "-n")] = "nested"
     force: Annotated[bool, typer.Option("--force/--no-force")] = False
+    inner: InnerOptions | None = None
+
+
+default_parsed_nested_options = NestedOptions(
+    inner=InnerOptions(innermost=InnermostOptions()),
+)
 
 
 @dataclass(frozen=True)

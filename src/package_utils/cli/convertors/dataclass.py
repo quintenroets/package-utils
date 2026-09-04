@@ -64,12 +64,9 @@ class Convertor(method.Convertor[T]):
             yield nested_parameter
 
     def create_cli_parameter(self, parameter: Parameter) -> Parameter:
+        name = self.name_prefix + parameter.name
         default = None if parameter.default in MISSING_DEFAULTS else parameter.default
-        return parameter.replace(
-            name=self.name_prefix + parameter.name,
-            kind=Parameter.POSITIONAL_OR_KEYWORD,
-            default=default,
-        )
+        return parameter.replace(name=name, default=default)
 
 
 def extract_dataclass(root: Any) -> "type[DataclassInstance]|None":

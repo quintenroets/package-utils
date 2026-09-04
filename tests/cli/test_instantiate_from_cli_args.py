@@ -47,6 +47,7 @@ def test_dataclass_defaults(class_: type[Options]) -> None:
     options = instantiate_from_cli_args(class_)
     verify_defaults(options)
     assert options.working_directory == Path.cwd()
+    assert options.nested_options == NestedOptions()
 
 
 def verify_defaults(options: Options) -> None:

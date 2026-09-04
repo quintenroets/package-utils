@@ -21,7 +21,9 @@ def convert(parameter: Parameter) -> Parameter:
         sub_type for sub_type in extract_types(type_) if is_path_class(sub_type)
     )
     info.path_type = typing.cast("type[str] | None", next(path_classes, None))
-    return parameter.replace(annotation=Annotated[type_, info])
+    return parameter.replace(
+        annotation=Annotated[type_, info], kind=Parameter.KEYWORD_ONLY
+    )
 
 
 def resolve_type(parameter: Parameter) -> Any:

@@ -13,16 +13,13 @@ if TYPE_CHECKING:
 
 
 T = TypeVar("T")
-MISSING_DEFAULTS = (
-    Parameter.empty,
-    dataclasses._HAS_DEFAULT_FACTORY,  # type: ignore[attr-defined] # noqa: SLF001
-)
 
 
 @dataclass
 class Convertor(method.Convertor[T]):
     object: type[T]
     name_prefix: str = ""
+    may_be_absent: bool = False
     argument_prefixes: dict[str, str] = field(default_factory=dict)
 
     def call(self, **kwargs: Any) -> T:
@@ -58,15 +55,28 @@ class Convertor(method.Convertor[T]):
         parameter: Parameter,
         dataclass_: "type[DataclassInstance]",
     ) -> Iterator[Parameter]:
-        convertor = Convertor(dataclass_, name_prefix=f"{parameter.name}_")
+        may_be_absent = parameter.default is not Parameter.empty
+        convertor = Convertor(dataclass_, f"{parameter.name}_", may_be_absent)
         for nested_parameter in convertor.extract_parameters():
             self.argument_prefixes[nested_parameter.name] = parameter.name
             yield nested_parameter
 
     def create_cli_parameter(self, parameter: Parameter) -> Parameter:
         name = self.name_prefix + parameter.name
-        default = None if parameter.default in MISSING_DEFAULTS else parameter.default
+        may_be_absent = parameter.default is Parameter.empty and self.may_be_absent
+        is_optional = parameter.name in self.default_factory_fields or may_be_absent
+        default = None if is_optional else parameter.default
         return parameter.replace(name=name, default=default)
+
+    @property
+    def default_factory_fields(self) -> set[str]:
+        object_ = typing.cast("type[DataclassInstance]", self.object)
+        fields = dataclasses.fields(object_)
+        return {
+            field_.name
+            for field_ in fields
+            if field_.default_factory is not dataclasses.MISSING
+        }
 
 
 def extract_dataclass(root: Any) -> "type[DataclassInstance]|None":

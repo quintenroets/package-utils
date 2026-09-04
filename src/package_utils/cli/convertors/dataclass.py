@@ -1,12 +1,13 @@
 import dataclasses
 import typing
 from collections.abc import Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from functools import cached_property
 from inspect import Parameter
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from . import method
-from .parameter import extract_types, resolve_type, typer_namespace
+from .parameter import extract_types, resolve_type
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance  # pragma: nocover
@@ -20,46 +21,40 @@ class Convertor(method.Convertor[T]):
     object: type[T]
     name_prefix: str = ""
     may_be_absent: bool = False
-    argument_prefixes: dict[str, str] = field(default_factory=dict)
 
-    def call(self, **kwargs: Any) -> T:
-        specified_kwargs = {k: v for k, v in kwargs.items() if v is not None}
-        if self.argument_prefixes:
-            import dacite  # noqa: PLC0415
+    def create_kwargs(self, arguments: dict[str, Any]) -> dict[str, Any]:
+        return dict(self.generate_kwargs(arguments))
 
-            self.unflatten(specified_kwargs)
-            config = dacite.Config(strict=True, forward_references=typer_namespace)
-            result = dacite.from_dict(self.object, specified_kwargs, config=config)
-        else:
-            result = self.object(**specified_kwargs)
-        return result
+    def generate_kwargs(self, arguments: dict[str, Any]) -> Iterator[tuple[str, Any]]:
+        for field_name, convertor in self.convertors.items():
+            value = convertor.create_value(arguments)
+            if value is not None:
+                yield field_name, value
 
-    def unflatten(self, items: dict[str, Any]) -> None:
-        while flattened_names := items.keys() & self.argument_prefixes.keys():
-            for name in flattened_names:
-                prefix = self.argument_prefixes[name]
-                nested_name = name.removeprefix(prefix + "_")
-                items.setdefault(prefix, {})[nested_name] = items.pop(name)
+    def create_value(self, arguments: dict[str, Any]) -> T | None:
+        kwargs = self.create_kwargs(arguments)
+        absent = self.may_be_absent and not kwargs
+        return None if absent else self.object(**kwargs)
 
     def extract_parameters(self) -> Iterator[Parameter]:
+        for convertor in self.convertors.values():
+            yield from convertor.extract_parameters()
+
+    @cached_property
+    def convertors(self) -> "dict[str, FieldConvertor]":
+        return dict(self.generate_convertors())
+
+    def generate_convertors(self) -> "Iterator[tuple[str, FieldConvertor]]":
         for parameter in super().extract_parameters():
             cli_parameter = self.create_cli_parameter(parameter)
             dataclass_ = extract_dataclass(resolve_type(cli_parameter))
             if dataclass_ is None:
-                yield cli_parameter
+                convertor: FieldConvertor = ParameterConvertor(cli_parameter)
             else:
-                yield from self.generate_recursive_parameters(cli_parameter, dataclass_)
-
-    def generate_recursive_parameters(
-        self,
-        parameter: Parameter,
-        dataclass_: "type[DataclassInstance]",
-    ) -> Iterator[Parameter]:
-        may_be_absent = parameter.default is not Parameter.empty
-        convertor = Convertor(dataclass_, f"{parameter.name}_", may_be_absent)
-        for nested_parameter in convertor.extract_parameters():
-            self.argument_prefixes[nested_parameter.name] = parameter.name
-            yield nested_parameter
+                name_prefix = f"{cli_parameter.name}_"
+                may_be_absent = cli_parameter.default is not Parameter.empty
+                convertor = Convertor(dataclass_, name_prefix, may_be_absent)
+            yield parameter.name, convertor
 
     def create_cli_parameter(self, parameter: Parameter) -> Parameter:
         name = self.name_prefix + parameter.name
@@ -77,6 +72,20 @@ class Convertor(method.Convertor[T]):
             for field_ in fields
             if field_.default_factory is not dataclasses.MISSING
         }
+
+
+@dataclass
+class ParameterConvertor:
+    parameter: Parameter
+
+    def create_value(self, arguments: dict[str, Any]) -> Any:
+        return arguments[self.parameter.name]
+
+    def extract_parameters(self) -> Iterator[Parameter]:
+        yield self.parameter
+
+
+FieldConvertor = Convertor[Any] | ParameterConvertor
 
 
 def extract_dataclass(root: Any) -> "type[DataclassInstance]|None":

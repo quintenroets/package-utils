@@ -15,7 +15,14 @@ from tests.cli.models import (
     dataclass_model,
     dataclass_model_with_string_annotations,
 )
-from tests.cli.models.dataclass_model import Action, NestedOptions, Options
+from tests.cli.models.dataclass_model import (
+    Action,
+    InnermostOptions,
+    InnerOptions,
+    NestedOptions,
+    Options,
+    default_parsed_nested_options,
+)
 from tests.cli.models.help_messages import Help
 
 
@@ -47,7 +54,8 @@ def test_dataclass_defaults(class_: type[Options]) -> None:
     options = instantiate_from_cli_args(class_)
     verify_defaults(options)
     assert options.working_directory == Path.cwd()
-    assert options.nested_options == NestedOptions()
+    assert options.nested_options == default_parsed_nested_options
+    assert options.optional_nested_options_without_defaults is None
 
 
 def verify_defaults(options: Options) -> None:
@@ -203,6 +211,20 @@ def test_declared_nested_option(
 @given(force=strategies.booleans())
 def test_declared_nested_flag_pair(class_: type[Options], *, force: bool) -> None:
     assert load_nested_options(class_, flag("force", enabled=force)).force is force
+
+
+@dataclass_argument
+@given(depth=strategies.integers(), innermost_depth=strategies.integers())
+def test_deep_nesting(class_: type[Options], depth: int, innermost_depth: int) -> None:
+    nested_options = load_nested_options(
+        class_,
+        "--nested-options-inner-depth",
+        depth,
+        "--nested-options-inner-innermost-depth",
+        innermost_depth,
+    )
+    expected = InnerOptions(depth, InnermostOptions(innermost_depth))
+    assert nested_options.inner == expected
 
 
 @dataclass_argument

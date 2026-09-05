@@ -5,9 +5,13 @@ from typing import Annotated, Literal, Optional, TypeVar
 
 import pytest
 
-from package_utils.annotations import base_types_of, first_parameter_types
+from package_utils.annotations import (
+    base_types_of,
+    dataclass_of,
+    first_parameter_types,
+)
 
-type_alias = SimpleNamespace(__value__=list[int])
+IntListAlias = SimpleNamespace(__value__=list[int])
 T = TypeVar("T")
 
 
@@ -42,7 +46,7 @@ def type_variable_parameter(options: T) -> None: ...
         (tuple[int, str] | None, [tuple]),
         (NoneType, [NoneType]),
         (Annotated[int, "metadata"], [int]),
-        (type_alias, [list]),
+        (IntListAlias, [list]),
         (Literal["a", "b"], [str, str]),
         (Literal[1, "a"], [int, str]),
         (Literal["a"] | None, [str]),
@@ -55,6 +59,17 @@ def type_variable_parameter(options: T) -> None: ...
 )
 def test_base_types_of(annotation: object, base_types: list[type]) -> None:
     assert list(base_types_of(annotation)) == base_types
+
+
+@pytest.mark.parametrize(
+    ("annotation", "dataclass_"),
+    [
+        (int | Options, Options),
+        (list[Options], None),
+    ],
+)
+def test_dataclass_of(annotation: object, dataclass_: type | None) -> None:
+    assert dataclass_of(annotation) is dataclass_
 
 
 @pytest.mark.parametrize(

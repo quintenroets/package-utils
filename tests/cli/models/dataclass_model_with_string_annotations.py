@@ -8,6 +8,7 @@ from superpathlib import Path
 from .dataclass_model import (
     Action,
     NestedOptions,
+    NestedOptionsAlias,
     NestedOptionsWithoutDefaults,
     default_nested_options,
 )
@@ -44,6 +45,7 @@ class Options:
         default_nested_options
     )
     optional_nested_options_without_defaults: NestedOptionsWithoutDefaults | None = None
+    aliased_nested_options: NestedOptionsAlias = default_nested_options  # type: ignore[valid-type]
 
     def __post_init__(self) -> None:
         self.verbosity = 0

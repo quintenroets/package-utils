@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from types import SimpleNamespace
 from typing import Annotated, Literal
 
 import typer
@@ -35,6 +36,9 @@ default_parsed_nested_options = NestedOptions(
 @dataclass(frozen=True)
 class NestedOptionsWithoutDefaults:
     use_nesting: bool
+
+
+NestedOptionsAlias = SimpleNamespace(__value__=NestedOptionsWithoutDefaults)
 
 
 class Action(Enum):
@@ -79,6 +83,7 @@ class Options:
         default_nested_options
     )
     optional_nested_options_without_defaults: NestedOptionsWithoutDefaults | None = None
+    aliased_nested_options: NestedOptionsAlias = default_nested_options  # type: ignore[valid-type]
 
     def __post_init__(self) -> None:
         self.verbosity = 0

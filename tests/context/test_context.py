@@ -1,8 +1,8 @@
 import os
-import typing
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any
+from types import ModuleType
+from typing import Any, cast
 from unittest.mock import patch
 
 import dacite
@@ -12,9 +12,6 @@ from superpathlib import Path
 from package_utils.context import Context as Context_
 from tests.context.models import models, models_with_string_annotations
 
-NestedDict = dict[str, str | dict[str, str]]
-
-
 Context = Context_[models.Options, models.Config, models.Secrets]
 
 
@@ -22,8 +19,13 @@ Context = Context_[models.Options, models.Config, models.Secrets]
     params=(models, models_with_string_annotations),
     ids=("resolved", "string_annotations"),
 )
-def context(request: pytest.FixtureRequest) -> Context:
-    return Context(request.param.Options, request.param.Config, request.param.Secrets)
+def models_(request: pytest.FixtureRequest) -> ModuleType:
+    return cast("ModuleType", request.param)
+
+
+@pytest.fixture
+def context(models_: ModuleType) -> Context:
+    return Context(models_.Options, models_.Config, models_.Secrets)
 
 
 @contextmanager
@@ -38,16 +40,11 @@ def filled_path(values: dict[str, Any]) -> Iterator[Path]:
 
 def test_specified_config(context: Context) -> None:
     output_path = Path.tempfile(create=False)
-    secrets_path = Path.tempfile(create=False)
-    config_values = {
-        "output_path": str(output_path),
-        "secrets_path": str(secrets_path),
-    }
+    config_values = {"output_path": str(output_path)}
     with filled_path(config_values) as config_path:
         context.options.config_path = config_path
         config = context.config
     assert config.output_path == output_path
-    assert config.secrets_path == secrets_path
 
 
 def test_non_existing_config_value_detected(context: Context) -> None:
@@ -58,74 +55,15 @@ def test_non_existing_config_value_detected(context: Context) -> None:
         _ = context.config
 
 
-@pytest.fixture
-def secrets() -> NestedDict:
-    api_secrets = {"id": "id", "token": "api_token"}
-    return {"token": "token", "api": api_secrets}
-
-
-def test_secrets_from_file(context: Context, secrets: NestedDict) -> None:
-    with filled_path(secrets) as secrets_path:
-        context.config.secrets_path = secrets_path
-        verify_secret_values(context, secrets)
-
-
-def verify_secret_values(context: Context, secrets: NestedDict) -> None:
-    api_secrets = typing.cast("dict[str, str]", secrets["api"])
-    assert context.secrets.token == secrets["token"]
-    assert context.secrets.api.id == api_secrets["id"]
-    assert context.secrets.api.token == api_secrets["token"]
-
-
-@pytest.fixture
-def environment_secrets() -> dict[str, str]:
-    return {"token": "token", "api_id": "id", "api_token": "api_token"}
-
-
-@contextmanager
-def secrets_in_environment(secrets: dict[str, str]) -> Iterator[None]:
-    secrets_with_upper_keys = {k.upper(): v for k, v in secrets.items()}
-    for k, v in secrets_with_upper_keys.items():
-        os.environ[k] = v
-    yield
-    for k in secrets_with_upper_keys:
-        os.environ.pop(k)
-
-
-def test_secrets_from_environment(
-    context: Context,
-    secrets: NestedDict,
-    environment_secrets: dict[str, str],
-) -> None:
-    with secrets_in_environment(environment_secrets):
-        verify_secret_values(context, secrets)
-
-
-def test_secrets_from_environment_and_file(
-    context: Context,
-    secrets: NestedDict,
-) -> None:
-    token = secrets.pop("token")
-    environment_secrets = {"token": typing.cast("str", token)}
-    filled_secrets_path = filled_path(secrets)
-    environment_with_secrets = secrets_in_environment(environment_secrets)
-    with filled_secrets_path as secrets_path, environment_with_secrets:
-        context.config.secrets_path = secrets_path
-        combined_secrets = secrets | environment_secrets
-        verify_secret_values(context, combined_secrets)
-
-
-def test_secrets_from_command(
-    context: Context,
-    environment_secrets: dict[str, str],
-    secrets: NestedDict,
-) -> None:
-    filled_secrets_path = filled_path({})
-    patched_command = patch("cli.capture_output", new=lambda _, key: os.environ[key])
-    environment_with_secrets = secrets_in_environment(environment_secrets)
-    with filled_secrets_path as secrets_path, environment_with_secrets, patched_command:
-        context.config.secrets_path = secrets_path
-        verify_secret_values(context, secrets)
+def test_secrets_from_environment(context: Context, models_: ModuleType) -> None:
+    secrets = models_.Secrets("token", models_.ApiSecrets("id", "api_token"))
+    environment_secrets = {
+        "TOKEN": secrets.token,
+        "API_ID": secrets.api.id,
+        "API_TOKEN": secrets.api.token,
+    }
+    with patch.dict(os.environ, environment_secrets):
+        assert context.secrets == secrets
 
 
 def test_is_running_in_ci(context: Context) -> None:

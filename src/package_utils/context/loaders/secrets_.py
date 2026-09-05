@@ -10,15 +10,12 @@ from typing import Generic, TypeVar, cast, get_type_hints
 
 import dacite
 
-from package_utils.context.models import Config, Options, Secrets
+from package_utils.context.models import Secrets
 
 from . import options
 
 if typing.TYPE_CHECKING:  # pragma: nocover
     from _typeshed import DataclassInstance
-    from superpathlib import Path
-
-    from .config import Loader as ConfigLoader
 
 
 T = TypeVar("T", bound="DataclassInstance")
@@ -51,21 +48,10 @@ class DataclassLoader(Generic[T]):
 
 
 @dataclass
-class Loader(options.Loader[Secrets], Generic[Options, Config, Secrets]):
-    config_loader: ConfigLoader[Options, Config] | None = None
-    delimiter: str = "_"
-
+class Loader(options.Loader[Secrets]):
     def load(self) -> DataclassInstance:
         self.add_defaults(self.typed_model)
-        file_secrets = self.load_file_secrets()
-        return dacite.from_dict(self.typed_model, file_secrets)
-
-    def load_file_secrets(self) -> dict[str, str]:
-        config = None if self.config_loader is None else self.config_loader.value
-        path = config and getattr(config, "secrets_path", None)
-        path = typing.cast("Path", path)
-        result = {} if path is None else path.yaml
-        return typing.cast("dict[str, str]", result)
+        return dacite.from_dict(self.typed_model, {})
 
     def add_defaults(
         self,
@@ -75,7 +61,7 @@ class Loader(options.Loader[Secrets], Generic[Options, Config, Secrets]):
         type_hints = get_type_hints(class_type)
         for field in fields(class_type):
             name = field.name
-            full_name = f"{parent_name}{self.delimiter}{name}" if parent_name else name
+            full_name = f"{parent_name}_{name}" if parent_name else name
             if field.default_factory == dataclasses.MISSING:
                 type_ = type_hints[name]
                 if is_dataclass(type_):

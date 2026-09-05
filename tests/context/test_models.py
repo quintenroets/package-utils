@@ -31,7 +31,6 @@ def test_config() -> None:
     context = Context[None, Config, None](Config=Config)
     assert isinstance(context.config, Config)
     assert context.config.output_path == Config.output_path
-    assert context.config.secrets_path == Config.secrets_path
     assert context.options is None
     assert context.secrets is None
 

@@ -6,8 +6,9 @@ from functools import cached_property
 from inspect import Parameter
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from package_utils.annotations import dataclass_of
+
 from . import method
-from .parameter import extract_types, resolve_type
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance  # pragma: nocover
@@ -23,13 +24,11 @@ class Convertor(method.Convertor[T]):
     may_be_absent: bool = False
 
     def create_kwargs(self, arguments: dict[str, Any]) -> dict[str, Any]:
-        return dict(self.generate_kwargs(arguments))
-
-    def generate_kwargs(self, arguments: dict[str, Any]) -> Iterator[tuple[str, Any]]:
-        for field_name, convertor in self.convertors.items():
-            value = convertor.create_value(arguments)
-            if value is not None:
-                yield field_name, value
+        return {
+            field_name: value
+            for field_name, convertor in self.convertors.items()
+            if (value := convertor.create_value(arguments)) is not None
+        }
 
     def create_value(self, arguments: dict[str, Any]) -> T | None:
         kwargs = self.create_kwargs(arguments)
@@ -42,19 +41,20 @@ class Convertor(method.Convertor[T]):
 
     @cached_property
     def convertors(self) -> "dict[str, FieldConvertor]":
-        return dict(self.generate_convertors())
+        return {
+            parameter.name: self.create_convertor(parameter)
+            for parameter in super().extract_parameters()
+        }
 
-    def generate_convertors(self) -> "Iterator[tuple[str, FieldConvertor]]":
-        for parameter in super().extract_parameters():
-            cli_parameter = self.create_cli_parameter(parameter)
-            dataclass_ = extract_dataclass(resolve_type(cli_parameter))
-            if dataclass_ is None:
-                convertor: FieldConvertor = ParameterConvertor(cli_parameter)
-            else:
-                name_prefix = f"{cli_parameter.name}_"
-                may_be_absent = cli_parameter.default is not Parameter.empty
-                convertor = Convertor(dataclass_, name_prefix, may_be_absent)
-            yield parameter.name, convertor
+    def create_convertor(self, parameter: Parameter) -> "FieldConvertor":
+        cli_parameter = self.create_cli_parameter(parameter)
+        name_prefix = f"{cli_parameter.name}_"
+        may_be_absent = cli_parameter.default is not Parameter.empty
+        return (
+            Convertor(dataclass_, name_prefix, may_be_absent)
+            if (dataclass_ := dataclass_of(parameter.annotation))
+            else ParameterConvertor(cli_parameter)
+        )
 
     def create_cli_parameter(self, parameter: Parameter) -> Parameter:
         name = self.name_prefix + parameter.name
@@ -86,8 +86,3 @@ class ParameterConvertor:
 
 
 FieldConvertor = Convertor[Any] | ParameterConvertor
-
-
-def extract_dataclass(root: Any) -> "type[DataclassInstance]|None":
-    types = (type_ for type_ in extract_types(root) if dataclasses.is_dataclass(type_))
-    return typing.cast("type[DataclassInstance]|None", next(types, None))

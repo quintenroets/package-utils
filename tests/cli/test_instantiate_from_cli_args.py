@@ -20,6 +20,7 @@ from tests.cli.models.dataclass_model import (
     InnermostOptions,
     InnerOptions,
     NestedOptions,
+    NestedOptionsWithoutDefaults,
     Options,
     default_parsed_nested_options,
 )
@@ -225,6 +226,14 @@ def test_deep_nesting(class_: type[Options], depth: int, innermost_depth: int) -
     )
     expected = InnerOptions(depth, InnermostOptions(innermost_depth))
     assert nested_options.inner == expected
+
+
+@dataclass_argument
+@given(use_nesting=strategies.booleans())
+def test_aliased_nested_options(class_: type[Options], *, use_nesting: bool) -> None:
+    option_string = flag("aliased-nested-options-use-nesting", enabled=use_nesting)
+    options = load_options(class_, option_string)
+    assert options.aliased_nested_options == NestedOptionsWithoutDefaults(use_nesting)
 
 
 @dataclass_argument

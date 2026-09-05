@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+from dataclasses import is_dataclass
 from types import NoneType, UnionType
 from typing import (
     TYPE_CHECKING,
@@ -16,6 +17,8 @@ from typing import (
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
+    from _typeshed import DataclassInstance  # pragma: nocover
+
 
 def first_parameter_types(method: Callable[..., Any]) -> Iterator[type]:
     return base_types_of(first_parameter_annotation(method))
@@ -24,6 +27,11 @@ def first_parameter_types(method: Callable[..., Any]) -> Iterator[type]:
 def first_parameter_annotation(method: Callable[..., Any]) -> object | None:
     name = next(iter(inspect.signature(method).parameters), None)
     return name and get_type_hints(method, include_extras=True).get(name)
+
+
+def dataclass_of(annotation: object) -> type[DataclassInstance] | None:
+    types = (type_ for type_ in base_types_of(annotation) if is_dataclass(type_))
+    return next(types, None)
 
 
 def base_types_of(annotation: object) -> Iterator[type]:

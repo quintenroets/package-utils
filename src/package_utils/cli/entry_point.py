@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import typer
 
-from package_utils.annotations import first_parameter_types
+from package_utils.annotations import dataclass_of, first_parameter_annotation
 
 from . import convertors
 
@@ -32,18 +32,13 @@ def run_entry_point(
     method: Callable[..., object], argument_class: type[Any] | None
 ) -> None:
     if argument_class is None:
-        argument_class = extract_argument_class(method)
-    if argument_class is not None and method.__doc__ is not None:
-        argument_class.__doc__ = method.__doc__
+        argument_class = dataclass_of(first_parameter_annotation(method))
     if argument_class is None:
         run_with_cli_args(method)
     else:
+        if method.__doc__ is not None:
+            argument_class.__doc__ = method.__doc__
         method(run_with_cli_args(argument_class))
-
-
-def extract_argument_class(method: Callable[..., Any]) -> type[Any] | None:
-    types = first_parameter_types(method)
-    return next((type_ for type_ in types if is_dataclass(type_)), None)
 
 
 def run_with_cli_args(object_: Callable[..., T] | type[T]) -> T:

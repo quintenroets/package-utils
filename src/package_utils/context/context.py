@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import os
 import typing
 from functools import cached_property
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from .lazy_secrets import create_lazy_secrets
-from .loaders import Loaders
 from .models import Config as Config_
 from .models import Models
 from .models import Options as Options_
@@ -12,6 +13,9 @@ from .models import Secrets as Secrets_
 
 if TYPE_CHECKING:  # pragma: nocover
     from _typeshed import DataclassInstance
+    from superpathlib import Path
+
+T = TypeVar("T")
 
 
 class Context(Generic[Options_, Config_, Secrets_]):
@@ -22,19 +26,23 @@ class Context(Generic[Options_, Config_, Secrets_]):
         Secrets: type[Secrets_] | None = None,  # noqa: N803
     ) -> None:
         self.models = Models[Options_, Config_, Secrets_](Options, Config, Secrets)
-        self.loaders = Loaders(self.models)
 
-    @property
+    @cached_property
     def options(self) -> Options_:
-        return self.loaders.options.value
+        model = typing.cast("type[DataclassInstance] | None", self.models.Options)
+        options = None if model is None else model()
+        return typing.cast("Options_", options)
 
-    @options.setter
-    def options(self, options: Options_) -> None:
-        self.loaders.options.value = options
-
-    @property
+    @cached_property
     def config(self) -> Config_:
-        return self.loaders.config.value
+        model = typing.cast("type[DataclassInstance] | None", self.models.Config)
+        if model is None:
+            config = None
+        else:
+            optional_path = getattr(self.options, "config_path", None)
+            path = typing.cast("Path | None", optional_path)
+            config = model() if path is None else load_from_file(model, path)
+        return typing.cast("Config_", config)
 
     @cached_property
     def secrets(self) -> Secrets_:
@@ -47,3 +55,12 @@ class Context(Generic[Options_, Config_, Secrets_]):
         return (
             "GITHUB_ACTIONS" in os.environ and "PYTEST_CURRENT_TEST" not in os.environ
         )
+
+
+def load_from_file(model: type[T], path: Path) -> T:
+    import dacite  # noqa: PLC0415
+    from superpathlib import Path  # noqa: PLC0415
+
+    config = dacite.Config(type_hooks={Path: Path}, strict=True)
+    info = typing.cast("dict[str, Any]", path.yaml)
+    return dacite.from_dict(model, info, config=config)

@@ -12,7 +12,7 @@ from typer.models import ParameterInfo
 typer_namespace = {"typer": typer}
 
 
-def convert(parameter: Parameter) -> Parameter:
+def create_typer_parameter(parameter: Parameter) -> Parameter:
     type_ = resolve_type(parameter)
     metadata = extract_metadata(parameter)
     infos = (info for info in metadata if isinstance(info, ParameterInfo))

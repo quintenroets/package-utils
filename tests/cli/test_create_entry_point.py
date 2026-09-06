@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 from tests.cli.models import dataclass_model
 
+default_options = dataclass_model.Options()
+
 
 def run(options: Options) -> str:
     """
@@ -56,6 +58,22 @@ class Options(dataclass_model.Options):
         return self.message
 
 
+def run_mixed(
+    verbose: bool = False,  # noqa: FBT001, FBT002
+    options: dataclass_model.Options = default_options,
+) -> str:
+    return f"{options.message} {verbose}"
+
+
+def run_undocumented_with_two_dataclasses(
+    options: dataclass_model.Options,
+    nested: dataclass_model.NestedOptionsWithoutDefaults = (
+        dataclass_model.default_nested_options
+    ),
+) -> str:
+    return f"{options.message} {nested.use_nesting}"
+
+
 @pytest.fixture
 def methods() -> tuple[Callable[..., str], ...]:
     return (
@@ -65,6 +83,8 @@ def methods() -> tuple[Callable[..., str], ...]:
         run_undocumented,
         run_union,
         Options.run,
+        run_mixed,
+        run_undocumented_with_two_dataclasses,
     )
 
 
@@ -128,13 +148,26 @@ def test_method_docstring(
         assert method.__doc__.strip() in capsys.readouterr().out
 
 
+@pytest.mark.parametrize(
+    ("method", "documented"),
+    [
+        (run_undocumented, True),
+        (run_mixed, True),
+        (run_undocumented_with_two_dataclasses, False),
+    ],
+)
 @cli_args("--help")
-def test_class_docstring(capsys: pytest.CaptureFixture[str]) -> None:
+def test_class_docstring(
+    method: Callable[..., str],
+    documented: bool,  # noqa: FBT001
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     with pytest.raises(SystemExit) as exception:
-        create_entry_point(run_undocumented)()
+        create_entry_point(method)()
     assert exception.value.code == 0
     assert dataclass_model.Options.__doc__ is not None
-    assert dataclass_model.Options.__doc__.strip() in capsys.readouterr().out
+    is_documented = dataclass_model.Options.__doc__.strip() in capsys.readouterr().out
+    assert is_documented == documented
 
 
 @no_cli_args

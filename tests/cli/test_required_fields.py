@@ -75,7 +75,7 @@ def test_required_field_after_nested_defaults() -> None:
     assert options == OptionsWithDefaultedNesting(default_parsed_nested_options, "name")
 
 
-@cli_args("--nested-use-nesting")
+@cli_args("--use-nesting")
 def test_required_nested_field_supplied() -> None:
     options = instantiate_from_cli_args(OptionsWithoutDefaultedNesting)
     assert options.nested == NestedOptionsWithoutDefaults(use_nesting=True)

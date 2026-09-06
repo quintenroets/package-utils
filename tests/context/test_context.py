@@ -56,13 +56,20 @@ def test_non_existing_config_value_detected(context: Context) -> None:
 
 
 def test_secrets_from_environment(context: Context, models_: ModuleType) -> None:
-    secrets = models_.Secrets("token", models_.ApiSecrets("id", "api_token"))
+    api = models_.ApiSecrets("id", "api_token")
+    optional_api = models_.ApiSecrets("optional_id", "optional_api_token")
+    defaulted = models_.DefaultedSecrets()
+    secrets = models_.Secrets("token", api, optional_api, defaulted, "password")
     environment_secrets = {
         "TOKEN": secrets.token,
-        "API_ID": secrets.api.id,
-        "API_TOKEN": secrets.api.token,
+        "API_ID": api.id,
+        "API_TOKEN": api.token,
+        "OPTIONAL_API_ID": optional_api.id,
+        "OPTIONAL_API_TOKEN": optional_api.token,
+        "DEFAULTED_TOKEN": defaulted.token,
+        "PASSWORD": secrets.password,
     }
-    with patch.dict(os.environ, environment_secrets):
+    with patch.dict(os.environ, environment_secrets, clear=True):
         assert context.secrets == secrets
 
 

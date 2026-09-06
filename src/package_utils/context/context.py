@@ -1,12 +1,17 @@
 import os
+import typing
 from functools import cached_property
-from typing import Generic
+from typing import TYPE_CHECKING, Generic
 
+from .lazy_secrets import create_lazy_secrets
 from .loaders import Loaders
 from .models import Config as Config_
 from .models import Models
 from .models import Options as Options_
 from .models import Secrets as Secrets_
+
+if TYPE_CHECKING:  # pragma: nocover
+    from _typeshed import DataclassInstance
 
 
 class Context(Generic[Options_, Config_, Secrets_]):
@@ -16,8 +21,8 @@ class Context(Generic[Options_, Config_, Secrets_]):
         Config: type[Config_] | None = None,  # noqa: N803
         Secrets: type[Secrets_] | None = None,  # noqa: N803
     ) -> None:
-        models = Models[Options_, Config_, Secrets_](Options, Config, Secrets)
-        self.loaders = Loaders(models)
+        self.models = Models[Options_, Config_, Secrets_](Options, Config, Secrets)
+        self.loaders = Loaders(self.models)
 
     @property
     def options(self) -> Options_:
@@ -31,9 +36,11 @@ class Context(Generic[Options_, Config_, Secrets_]):
     def config(self) -> Config_:
         return self.loaders.config.value
 
-    @property
+    @cached_property
     def secrets(self) -> Secrets_:
-        return self.loaders.secrets.value
+        model = typing.cast("type[DataclassInstance] | None", self.models.Secrets)
+        secrets = None if model is None else create_lazy_secrets(model)
+        return typing.cast("Secrets_", secrets)
 
     @cached_property
     def is_running_in_ci(self) -> bool:

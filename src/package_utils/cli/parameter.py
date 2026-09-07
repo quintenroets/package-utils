@@ -9,12 +9,16 @@ from typing import Annotated, Any
 import typer
 from typer.models import ParameterInfo
 
+from package_utils.annotations import resolve_aliases
+
 typer_namespace = {"typer": typer}
 
 
 def create_typer_parameter(parameter: Parameter) -> Parameter:
-    type_ = resolve_type(parameter)
-    metadata = extract_metadata(parameter)
+    annotation = resolve_aliases(parameter.annotation)
+    metadata = getattr(annotation, "__metadata__", ())
+    declared_type = annotation.__origin__ if metadata else annotation
+    type_ = declared_type | None if parameter.default is None else declared_type
     infos = (info for info in metadata if isinstance(info, ParameterInfo))
     info = copy.copy(next(infos, typer.Option()))
     path_classes = (
@@ -24,16 +28,6 @@ def create_typer_parameter(parameter: Parameter) -> Parameter:
     return parameter.replace(
         annotation=Annotated[type_, info], kind=Parameter.KEYWORD_ONLY
     )
-
-
-def resolve_type(parameter: Parameter) -> Any:
-    annotation = parameter.annotation
-    type_ = annotation.__origin__ if extract_metadata(parameter) else annotation
-    return type_ | None if parameter.default is None else type_
-
-
-def extract_metadata(parameter: Parameter) -> tuple[Any, ...]:
-    return getattr(parameter.annotation, "__metadata__", ())
 
 
 def extract_types(root: Any) -> Iterator[object]:

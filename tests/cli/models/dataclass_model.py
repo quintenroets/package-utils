@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from types import SimpleNamespace
 from typing import Annotated, Literal
 
 import typer
 from superpathlib import Path
+from typing_extensions import TypeAliasType
 
 from .help_messages import Help
 
@@ -38,7 +38,8 @@ class NestedOptionsWithoutDefaults:
     use_nesting: bool
 
 
-NestedOptionsAlias = SimpleNamespace(__value__=NestedOptionsWithoutDefaults)
+NestedOptionsAlias = TypeAliasType("NestedOptionsAlias", NestedOptionsWithoutDefaults)
+PathListAlias = TypeAliasType("PathListAlias", list[Path])
 
 
 class Action(Enum):
@@ -83,7 +84,8 @@ class Options:
         default_nested_options
     )
     optional_nested_options_without_defaults: NestedOptionsWithoutDefaults | None = None
-    aliased_nested_options: NestedOptionsAlias = default_nested_options  # type: ignore[valid-type]
+    aliased_nested_options: NestedOptionsAlias = default_nested_options
+    aliased_paths: PathListAlias = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.verbosity = 0

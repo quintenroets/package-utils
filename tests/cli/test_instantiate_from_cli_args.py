@@ -237,6 +237,13 @@ def test_aliased_nested_options(class_: type[Options], *, use_nesting: bool) -> 
 
 
 @dataclass_argument
+@given(paths=strategies.lists(path_strategy()))
+def test_aliased_list_option(class_: type[Options], paths: list[Path]) -> None:
+    args = [value for path in paths for value in ("--aliased-paths", path)]
+    assert load_options(class_, *args).aliased_paths == paths
+
+
+@dataclass_argument
 def test_prefixed_nested_option_not_exposed(class_: type[Options]) -> None:
     assert_option_not_exposed(class_, "--nested-options-declared-message", "message")
 

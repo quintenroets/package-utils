@@ -10,6 +10,7 @@ from .dataclass_model import (
     NestedOptions,
     NestedOptionsAlias,
     NestedOptionsWithoutDefaults,
+    PathListAlias,
     default_nested_options,
 )
 from .help_messages import Help
@@ -45,7 +46,8 @@ class Options:
         default_nested_options
     )
     optional_nested_options_without_defaults: NestedOptionsWithoutDefaults | None = None
-    aliased_nested_options: NestedOptionsAlias = default_nested_options  # type: ignore[valid-type]
+    aliased_nested_options: NestedOptionsAlias = default_nested_options
+    aliased_paths: PathListAlias = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.verbosity = 0

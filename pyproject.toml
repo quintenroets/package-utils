@@ -31,6 +31,7 @@ dev = [
     "hypothesis >=6.91.0, <7",
     "package-dev-tools >=0.8.1, <1",
     "package-dev-utils >=0.1.6, <1",
+    "typing-extensions >=4.6.0, <5",
 ]
 
 [project.urls]

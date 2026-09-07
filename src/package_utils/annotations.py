@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import inspect
+import operator
 from dataclasses import is_dataclass
+from functools import reduce
 from types import NoneType, UnionType
 from typing import (
     TYPE_CHECKING,
@@ -35,18 +37,41 @@ def dataclass_of(annotation: object) -> type[DataclassInstance] | None:
 
 
 def base_types_of(annotation: object) -> Iterator[type]:
-    origin = get_origin(annotation)
-    resolved_annotation = annotation if origin is None else origin
-    if resolved_annotation is UnionType or resolved_annotation is Union:
+    origin = origin_of(annotation)
+    if origin is UnionType or origin is Union:
         for argument in get_args(annotation):
             if argument is not NoneType:
                 yield from base_types_of(argument)
-    elif resolved_annotation is Annotated:
+    elif origin is Annotated:
         yield from base_types_of(get_args(annotation)[0])
-    elif resolved_annotation is Literal:
+    elif origin is Literal:
         for argument in get_args(annotation):
             yield type(argument)
-    elif isinstance(resolved_annotation, type):
-        yield resolved_annotation
-    elif hasattr(resolved_annotation, "__value__"):
-        yield from base_types_of(resolved_annotation.__value__)
+    elif isinstance(origin, type):
+        yield origin
+    elif hasattr(origin, "__value__"):
+        yield from base_types_of(expand_alias(origin, get_args(annotation)))
+
+
+def resolve_aliases(annotation: object) -> Any:
+    origin = origin_of(annotation)
+    arguments = get_args(annotation)
+    if hasattr(origin, "__value__"):
+        resolution = resolve_aliases(expand_alias(origin, arguments))
+    else:
+        resolved_arguments = tuple(resolve_aliases(argument) for argument in arguments)
+        if resolved_arguments == arguments:
+            resolution = annotation
+        elif origin is UnionType:
+            resolution = reduce(operator.or_, resolved_arguments)
+        else:
+            resolution = origin[resolved_arguments]
+    return resolution
+
+
+def origin_of(annotation: object) -> Any:
+    return get_origin(annotation) or annotation
+
+
+def expand_alias(alias: Any, arguments: tuple[Any, ...]) -> Any:
+    return alias.__value__[arguments] if arguments else alias.__value__

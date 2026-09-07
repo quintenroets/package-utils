@@ -5,9 +5,9 @@ from functools import cached_property
 from inspect import Parameter, signature
 from typing import Any, Generic, TypeVar
 
-from package_utils.annotations import dataclass_of
+import typer
 
-from .parameter import typer_namespace
+from package_utils.annotations import dataclass_of
 
 T = TypeVar("T")
 
@@ -29,12 +29,12 @@ class Convertor(Generic[T]):
     def is_present(self, arguments: dict[str, Any]) -> bool:
         return not self.may_be_absent or any(
             arguments[parameter.name] is not None
-            for parameter in self.extract_cli_parameters()
+            for parameter in self.flatten_parameters()
         )
 
-    def extract_cli_parameters(self) -> Iterator[Parameter]:
+    def flatten_parameters(self) -> Iterator[Parameter]:
         for convertor in self.convertors.values():
-            yield from convertor.extract_cli_parameters()
+            yield from convertor.flatten_parameters()
 
     @property
     def parameter_documentation(self) -> str | None:
@@ -87,7 +87,7 @@ class Convertor(Generic[T]):
 
     @cached_property
     def parameters(self) -> list[Parameter]:
-        signature_ = signature(self.object, eval_str=True, locals=typer_namespace)
+        signature_ = signature(self.object, eval_str=True, locals={"typer": typer})
         return list(signature_.parameters.values())
 
 
@@ -101,7 +101,7 @@ class ArgumentConvertor:
     def is_present(self, arguments: dict[str, Any]) -> bool:
         return arguments[self.parameter.name] is not None
 
-    def extract_cli_parameters(self) -> Iterator[Parameter]:
+    def flatten_parameters(self) -> Iterator[Parameter]:
         yield self.parameter
 
 

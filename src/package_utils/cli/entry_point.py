@@ -1,14 +1,18 @@
+import copy
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from inspect import Signature
-from typing import Any, Generic, TypeVar
+from inspect import Parameter, Signature
+from pathlib import Path
+from typing import Annotated, Any, Generic, TypeVar
 
 import typer
+from typer.models import ParameterInfo
+
+from package_utils.annotations import contained_class_of, resolve_aliases
 
 from .convertor import Convertor
-from .parameter import create_typer_parameter
 
 T = TypeVar("T")
 
@@ -58,11 +62,23 @@ def create_command(
         return ReturnValue(convertor.create_value(arguments))
 
     parameters = [
-        create_typer_parameter(parameter)
-        for parameter in convertor.extract_cli_parameters()
+        annotate_parameter(parameter) for parameter in convertor.flatten_parameters()
     ]
     command.__doc__ = (
         documentation or object_.__doc__ or convertor.parameter_documentation
     )
     command.__signature__ = Signature(parameters=parameters)  # type: ignore[attr-defined]
     return command
+
+
+def annotate_parameter(parameter: Parameter) -> Parameter:
+    annotation = resolve_aliases(parameter.annotation)
+    metadata = getattr(annotation, "__metadata__", ())
+    declared_type = annotation.__origin__ if metadata else annotation
+    type_ = declared_type | None if parameter.default is None else declared_type
+    infos = (info for info in metadata if isinstance(info, ParameterInfo))
+    info = copy.copy(next(infos, typer.Option()))
+    info.path_type = contained_class_of(type_, Path)
+    return parameter.replace(
+        annotation=Annotated[type_, info], kind=Parameter.KEYWORD_ONLY
+    )

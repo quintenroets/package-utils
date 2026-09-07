@@ -10,6 +10,7 @@ from typing import (
     Annotated,
     Any,
     Literal,
+    TypeVar,
     Union,
     get_args,
     get_origin,
@@ -20,6 +21,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
     from _typeshed import DataclassInstance  # pragma: nocover
+
+T = TypeVar("T")
 
 
 def first_parameter_types(method: Callable[..., Any]) -> Iterator[type]:
@@ -36,21 +39,11 @@ def dataclass_of(annotation: object) -> type[DataclassInstance] | None:
     return next(types, None)
 
 
-def base_types_of(annotation: object) -> Iterator[type]:
-    origin = origin_of(annotation)
-    if origin is UnionType or origin is Union:
-        for argument in get_args(annotation):
-            if argument is not NoneType:
-                yield from base_types_of(argument)
-    elif origin is Annotated:
-        yield from base_types_of(get_args(annotation)[0])
-    elif origin is Literal:
-        for argument in get_args(annotation):
-            yield type(argument)
-    elif isinstance(origin, type):
-        yield origin
-    elif hasattr(origin, "__value__"):
-        yield from base_types_of(expand_alias(origin, get_args(annotation)))
+def contained_class_of(annotation: object, class_: type[T]) -> type[T] | None:
+    types = (
+        type_ for type_ in contained_types_of(annotation) if issubclass(type_, class_)
+    )
+    return next(types, None)
 
 
 def resolve_aliases(annotation: object) -> Any:
@@ -67,6 +60,37 @@ def resolve_aliases(annotation: object) -> Any:
         else:
             resolution = origin[resolved_arguments]
     return resolution
+
+
+def base_types_of(annotation: object) -> Iterator[type]:
+    return (type_ for type_, _ in base_types_with_arguments(annotation))
+
+
+def contained_types_of(annotation: object) -> Iterator[type]:
+    for type_, arguments in base_types_with_arguments(annotation):
+        yield type_
+        for argument in arguments:
+            yield from contained_types_of(argument)
+
+
+def base_types_with_arguments(
+    annotation: object,
+) -> Iterator[tuple[type, tuple[Any, ...]]]:
+    origin = origin_of(annotation)
+    arguments = get_args(annotation)
+    if origin is UnionType or origin is Union:
+        for argument in arguments:
+            if argument is not NoneType:
+                yield from base_types_with_arguments(argument)
+    elif origin is Annotated:
+        yield from base_types_with_arguments(arguments[0])
+    elif origin is Literal:
+        for argument in arguments:
+            yield type(argument), ()
+    elif isinstance(origin, type):
+        yield origin, arguments
+    elif hasattr(origin, "__value__"):
+        yield from base_types_with_arguments(expand_alias(origin, arguments))
 
 
 def origin_of(annotation: object) -> Any:

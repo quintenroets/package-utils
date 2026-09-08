@@ -1,1 +1,1 @@
-from .entry_point import create_entry_point, instantiate_from_cli_args
+from .entry_point import create_entry_point

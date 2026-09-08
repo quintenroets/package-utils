@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import pytest
 from package_dev_utils.tests.args import no_cli_args
 
-from package_utils.cli import instantiate_from_cli_args
+from package_utils.cli.entry_point import invoke_from_cli_args
 
 
 @dataclass
@@ -26,4 +26,4 @@ class Function:
 @pytest.mark.parametrize("class_", [VariableLengthTuple, Dictionary, Function])
 def test_unsupported_annotation_rejected(class_: type) -> None:
     with pytest.raises(RuntimeError):
-        instantiate_from_cli_args(class_)
+        invoke_from_cli_args(class_)

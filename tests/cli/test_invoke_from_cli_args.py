@@ -8,7 +8,7 @@ from package_dev_utils.tests.args import cli_args, no_cli_args
 from superpathlib import Path
 from typer._click.exceptions import NoSuchOption
 
-from package_utils.cli import instantiate_from_cli_args
+from package_utils.cli.entry_point import invoke_from_cli_args
 from tests.cli.models import (
     class_model,
     class_model_with_string_annotations,
@@ -25,6 +25,7 @@ from tests.cli.models.dataclass_model import (
     default_parsed_nested_options,
 )
 from tests.cli.models.help_messages import Help
+from tests.cli.test_create_entry_point import run_with_arguments
 
 
 def text_strategy() -> SearchStrategy[str]:
@@ -44,15 +45,30 @@ class_argument = pytest.mark.parametrize("class_", [*dataclasses, *normal_classe
 
 
 @no_cli_args
+def test_default_result() -> None:
+    assert invoke_from_cli_args(run_with_arguments) == Options.message
+
+
+@cli_args("--message", "custom")
+def test_custom_result() -> None:
+    assert invoke_from_cli_args(run_with_arguments) == "custom"
+
+
+@no_cli_args
+def test_integer_result() -> None:
+    assert invoke_from_cli_args(lambda: 1) == 1
+
+
+@no_cli_args
 @normal_class_argument
 def test_class_defaults(class_: type[Options]) -> None:
-    verify_defaults(instantiate_from_cli_args(class_))
+    verify_defaults(invoke_from_cli_args(class_))
 
 
 @no_cli_args
 @dataclass_argument
 def test_dataclass_defaults(class_: type[Options]) -> None:
-    options = instantiate_from_cli_args(class_)
+    options = invoke_from_cli_args(class_)
     verify_defaults(options)
     assert options.working_directory == Path.cwd()
     assert options.nested_options == default_parsed_nested_options
@@ -131,7 +147,7 @@ def test_verbosity_not_exposed(class_: type[Options], verbosity: int) -> None:
 @cli_args("--help")
 def test_help(class_: type[Options], capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exception:
-        instantiate_from_cli_args(class_)
+        invoke_from_cli_args(class_)
     assert exception.value.code == 0
     output = capsys.readouterr().out
     expected = "Usage: ", str(class_.__doc__).strip(), Help.action, Help.message
@@ -300,7 +316,7 @@ def test_combined_arguments(  # noqa: PLR0913, PLR0917
 
 def load_options(class_: type[Options], *args: object) -> Options:
     with cli_args(*args):
-        return instantiate_from_cli_args(class_)
+        return invoke_from_cli_args(class_)
 
 
 def load_nested_options(class_: type[Options], *args: object) -> NestedOptions:

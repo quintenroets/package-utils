@@ -22,21 +22,16 @@ def create_entry_point(
     return partial(run_entry_point, method, argument_class)
 
 
-def instantiate_from_cli_args(class_: type[T], documented_object: object = None) -> T:
-    documentation = None if documented_object is None else documented_object.__doc__
-    return run_with_cli_args(class_, documentation)
-
-
 def run_entry_point(
     method: Callable[..., object], argument_class: type[Any] | None
 ) -> None:
     if argument_class is None:
-        run_with_cli_args(method)
+        invoke_from_cli_args(method)
     else:
-        method(run_with_cli_args(argument_class, method.__doc__))
+        method(invoke_from_cli_args(argument_class, method.__doc__))
 
 
-def run_with_cli_args(
+def invoke_from_cli_args(
     object_: Callable[..., T] | type[T], documentation: str | None = None
 ) -> T:
     convertor = Convertor(object_, documentation_override=documentation)

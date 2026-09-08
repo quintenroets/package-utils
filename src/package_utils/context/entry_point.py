@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from package_utils.cli import instantiate_from_cli_args
+from package_utils.cli.entry_point import invoke_from_cli_args
 
 from .context import Context
 from .models import Config, Options, Secrets
@@ -15,9 +15,8 @@ def create_entry_point(
 ) -> Callable[[], None]:
     def entry_point() -> None:
         if context.models.Options is not None:
-            context.options = instantiate_from_cli_args(
-                context.models.Options,
-                documented_object=method,
+            context.options = invoke_from_cli_args(
+                context.models.Options, method.__doc__
             )
             if context_creation_callback is not None:
                 context_creation_callback(context)

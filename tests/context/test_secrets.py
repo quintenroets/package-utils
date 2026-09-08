@@ -25,7 +25,7 @@ def create_secrets(**environment: str) -> "Iterator[Secrets]":
         yield Context[None, None, Secrets](Secrets=Secrets).secrets
 
 
-@patch("package_utils.secrets_.subprocess.check_output")
+@patch("subprocess.check_output")
 def test_askpass(check_output: "MagicMock") -> None:
     mock_value = "mock"
     check_output.return_value = f"{mock_value}\n".encode()

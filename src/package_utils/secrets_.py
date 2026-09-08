@@ -1,12 +1,13 @@
 import os
-import shlex
-import subprocess
 
 
 def load_secret(name: str) -> str:
     environment_name = name.upper().replace(" ", "_")
     value = os.environ.get(environment_name)
     if not value and (askpass := os.environ.get("SECRET_ASKPASS")):
+        import shlex  # noqa: PLC0415  # lazy import for performance
+        import subprocess  # noqa: PLC0415  # lazy import for performance
+
         command = [*shlex.split(askpass), name]
         value = subprocess.check_output(command).decode().strip()  # noqa: S603
     if not value:

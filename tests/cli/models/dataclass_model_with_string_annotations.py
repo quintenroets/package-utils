@@ -51,3 +51,11 @@ class Options:
 
     def __post_init__(self) -> None:
         self.verbosity = 0
+
+
+relative_path = Path("relative")
+
+
+@dataclass
+class ValueShapingOptions:
+    location: Annotated[Path, typer.Option(resolve_path=True)] = relative_path

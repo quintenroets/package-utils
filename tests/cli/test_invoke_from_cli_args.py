@@ -1,4 +1,5 @@
 import random
+import sys
 from collections.abc import Iterator
 
 import pytest
@@ -8,11 +9,14 @@ from package_dev_utils.tests.args import cli_args, no_cli_args
 from superpathlib import Path
 from typer._click.exceptions import NoSuchOption
 
-from package_utils.cli.entry_point import invoke_from_cli_args
+from package_utils.cli.convertor import Convertor
+from package_utils.cli.entry_point import invoke_from_cli_args, load_arguments
+from package_utils.cli.parser import parse_cli_args
 from tests.cli.models import (
     class_model,
     class_model_with_string_annotations,
     dataclass_model,
+    dataclass_model_with_colliding_names,
     dataclass_model_with_string_annotations,
 )
 from tests.cli.models.dataclass_model import (
@@ -23,6 +27,9 @@ from tests.cli.models.dataclass_model import (
     NestedOptionsWithoutDefaults,
     Options,
     default_parsed_nested_options,
+)
+from tests.cli.models.dataclass_model_with_string_annotations import (
+    ValueShapingOptions,
 )
 from tests.cli.models.help_messages import Help
 from tests.cli.test_create_entry_point import run_with_arguments
@@ -314,6 +321,40 @@ def test_combined_arguments(  # noqa: PLR0913, PLR0917
     assert options.n_retries == n_retries
 
 
+@no_cli_args
+def test_declared_defaults_match_parsed_arguments(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    convertor = Convertor(dataclass_model_with_string_annotations.Options)
+    parsed_arguments = parse_cli_args(convertor)
+    forbid_typer(monkeypatch)
+    assert load_arguments(convertor) == parsed_arguments
+
+
+@no_cli_args
+def test_value_neutral_declarations_avoid_typer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    forbid_typer(monkeypatch)
+    options = invoke_from_cli_args(dataclass_model_with_string_annotations.Options)
+    assert options.nested_options == default_parsed_nested_options
+
+
+@no_cli_args
+def test_value_shaping_declaration_triggers_typer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    forbid_typer(monkeypatch)
+    with pytest.raises(ImportError):
+        invoke_from_cli_args(ValueShapingOptions)
+
+
+@cli_args("--mode", "write")
+def test_colliding_name_resolves_to_model() -> None:
+    options = invoke_from_cli_args(dataclass_model_with_colliding_names.Options)
+    assert options.mode is dataclass_model_with_colliding_names.Option.write
+
+
 def load_options(class_: type[Options], *args: object) -> Options:
     with cli_args(*args):
         return invoke_from_cli_args(class_)
@@ -347,3 +388,8 @@ def generate_arguments(
         value = options[key]
         if value is not None:
             yield value
+
+
+def forbid_typer(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(sys.modules, "typer", None)
+    monkeypatch.delitem(sys.modules, "package_utils.cli.parser", raising=False)

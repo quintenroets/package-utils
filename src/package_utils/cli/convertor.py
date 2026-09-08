@@ -1,5 +1,5 @@
 import dataclasses
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cached_property
 from inspect import Parameter, signature
@@ -17,6 +17,7 @@ class Convertor(Generic[T]):
     object: Callable[..., T]
     name_prefix: str = ""
     may_be_absent: bool = False
+    documentation_override: str | None = None
 
     def create_value(self, arguments: dict[str, Any]) -> T:
         kwargs = {
@@ -28,35 +29,39 @@ class Convertor(Generic[T]):
 
     def is_present(self, arguments: dict[str, Any]) -> bool:
         return not self.may_be_absent or any(
-            arguments[parameter.name] is not None
-            for parameter in self.flatten_parameters()
+            arguments[parameter.name] is not None for parameter in self.parameters
         )
 
-    def flatten_parameters(self) -> Iterator[Parameter]:
-        for convertor in self.convertors.values():
-            yield from convertor.flatten_parameters()
+    @cached_property
+    def parameters(self) -> list[Parameter]:
+        return [
+            parameter
+            for convertor in self.convertors.values()
+            for parameter in convertor.parameters
+        ]
 
     @property
-    def parameter_documentation(self) -> str | None:
-        dataclasses_ = [
-            dataclass_
-            for parameter in self.parameters
-            if (dataclass_ := dataclass_of(parameter.annotation))
+    def documentation(self) -> str | None:
+        nested = [
+            convertor
+            for convertor in self.convertors.values()
+            if isinstance(convertor, Convertor)
         ]
-        return dataclasses_[0].__doc__ if len(dataclasses_) == 1 else None
+        only_documentation = nested[0].documentation if len(nested) == 1 else None
+        return self.documentation_override or self.object.__doc__ or only_documentation
 
     @cached_property
     def convertors(self) -> "dict[str, ParameterConvertor]":
         return {
             parameter.name: self.create_convertor(parameter)
-            for parameter in self.parameters
+            for parameter in self.signature_parameters
         }
 
     def create_convertor(self, parameter: Parameter) -> "ParameterConvertor":
         cli_parameter = self.create_cli_parameter(parameter)
-        is_sole_parameter = len(self.parameters) == 1
+        is_only_parameter = len(self.signature_parameters) == 1
         name_prefix = (
-            self.name_prefix if is_sole_parameter else f"{cli_parameter.name}_"
+            self.name_prefix if is_only_parameter else f"{cli_parameter.name}_"
         )
         may_be_absent = cli_parameter.default is not Parameter.empty
         return (
@@ -86,7 +91,7 @@ class Convertor(Generic[T]):
         }
 
     @cached_property
-    def parameters(self) -> list[Parameter]:
+    def signature_parameters(self) -> list[Parameter]:
         signature_ = signature(self.object, eval_str=True, locals={"typer": typer})
         return list(signature_.parameters.values())
 
@@ -101,8 +106,9 @@ class ArgumentConvertor:
     def is_present(self, arguments: dict[str, Any]) -> bool:
         return arguments[self.parameter.name] is not None
 
-    def flatten_parameters(self) -> Iterator[Parameter]:
-        yield self.parameter
+    @property
+    def parameters(self) -> list[Parameter]:
+        return [self.parameter]
 
 
 ParameterConvertor = Convertor[Any] | ArgumentConvertor

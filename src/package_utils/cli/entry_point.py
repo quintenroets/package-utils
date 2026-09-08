@@ -1,11 +1,10 @@
 import copy
 import sys
 from collections.abc import Callable
-from dataclasses import dataclass
 from functools import partial
 from inspect import Parameter, Signature
 from pathlib import Path
-from typing import Annotated, Any, Generic, TypeVar
+from typing import Annotated, Any, TypeVar
 
 import typer
 from typer.models import ParameterInfo
@@ -15,11 +14,6 @@ from package_utils.annotations import contained_class_of, resolve_aliases
 from .convertor import Convertor
 
 T = TypeVar("T")
-
-
-@dataclass
-class ReturnValue(Generic[T]):
-    value: T
 
 
 def create_entry_point(
@@ -45,28 +39,25 @@ def run_entry_point(
 def run_with_cli_args(
     object_: Callable[..., T] | type[T], documentation: str | None = None
 ) -> T:
+    convertor = Convertor(object_, documentation_override=documentation)
+    return convertor.create_value(parse_cli_args(convertor))
+
+
+def parse_cli_args(convertor: Convertor[Any]) -> dict[str, Any]:
     app = typer.Typer(add_completion=False)
-    app.command()(create_command(object_, documentation))
-    result: ReturnValue[T] | int = app(standalone_mode=False)
+    app.command()(create_command(convertor))
+    result: dict[str, Any] | int = app(standalone_mode=False)
     if isinstance(result, int):
         sys.exit(result)
-    return result.value
+    return result
 
 
-def create_command(
-    object_: Callable[..., T] | type[T], documentation: str | None
-) -> Callable[..., ReturnValue[T]]:
-    convertor = Convertor(object_)
+def create_command(convertor: Convertor[Any]) -> Callable[..., dict[str, Any]]:
+    def command(**arguments: Any) -> dict[str, Any]:
+        return arguments
 
-    def command(**arguments: Any) -> ReturnValue[T]:
-        return ReturnValue(convertor.create_value(arguments))
-
-    parameters = [
-        annotate_parameter(parameter) for parameter in convertor.flatten_parameters()
-    ]
-    command.__doc__ = (
-        documentation or object_.__doc__ or convertor.parameter_documentation
-    )
+    command.__doc__ = convertor.documentation
+    parameters = [annotate_parameter(parameter) for parameter in convertor.parameters]
     command.__signature__ = Signature(parameters=parameters)  # type: ignore[attr-defined]
     return command
 

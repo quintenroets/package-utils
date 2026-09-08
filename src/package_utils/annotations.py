@@ -46,6 +46,10 @@ def contained_class_of(annotation: object, class_: type[T]) -> type[T] | None:
     return next(types, None)
 
 
+def metadata_of(annotation: object) -> tuple[Any, ...]:
+    return getattr(annotation, "__metadata__", ())
+
+
 def resolve_aliases(annotation: object) -> Any:
     origin = origin_of(annotation)
     arguments = get_args(annotation)

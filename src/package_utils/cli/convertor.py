@@ -2,12 +2,12 @@ import dataclasses
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cached_property
-from inspect import Parameter, signature
+from inspect import Parameter
 from typing import Any, Generic, TypeVar
 
-import typer
-
 from package_utils.annotations import dataclass_of
+
+from .declarations import declared_parameters
 
 T = TypeVar("T")
 
@@ -52,14 +52,19 @@ class Convertor(Generic[T]):
 
     @cached_property
     def convertors(self) -> "dict[str, ParameterConvertor]":
+        parameters = declared_parameters(self.object)
+        is_only_parameter = len(parameters) == 1
         return {
-            parameter.name: self.create_convertor(parameter)
-            for parameter in self.signature_parameters
+            parameter.name: self.create_convertor(
+                parameter, is_only_parameter=is_only_parameter
+            )
+            for parameter in parameters
         }
 
-    def create_convertor(self, parameter: Parameter) -> "ParameterConvertor":
+    def create_convertor(
+        self, parameter: Parameter, *, is_only_parameter: bool
+    ) -> "ParameterConvertor":
         cli_parameter = self.create_cli_parameter(parameter)
-        is_only_parameter = len(self.signature_parameters) == 1
         name_prefix = (
             self.name_prefix if is_only_parameter else f"{cli_parameter.name}_"
         )
@@ -89,11 +94,6 @@ class Convertor(Generic[T]):
             for field_ in fields
             if field_.default_factory is not dataclasses.MISSING
         }
-
-    @cached_property
-    def signature_parameters(self) -> list[Parameter]:
-        signature_ = signature(self.object, eval_str=True, locals={"typer": typer})
-        return list(signature_.parameters.values())
 
 
 @dataclass

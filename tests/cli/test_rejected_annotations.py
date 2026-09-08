@@ -2,7 +2,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import pytest
-from package_dev_utils.tests.args import no_cli_args
+from package_dev_utils.tests.args import cli_args
 
 from package_utils.cli.entry_point import invoke_from_cli_args
 
@@ -22,7 +22,7 @@ class Function:
     hook: Callable[[int], str] = str
 
 
-@no_cli_args
+@cli_args("--help")
 @pytest.mark.parametrize("class_", [VariableLengthTuple, Dictionary, Function])
 def test_unsupported_annotation_rejected(class_: type) -> None:
     with pytest.raises(RuntimeError):

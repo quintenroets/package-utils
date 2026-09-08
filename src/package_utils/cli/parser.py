@@ -8,9 +8,10 @@ from typing import Annotated, Any
 import typer
 from typer.models import ParameterInfo
 
-from package_utils.annotations import contained_class_of, resolve_aliases
+from package_utils.annotations import contained_class_of, metadata_of, resolve_aliases
 
 from .convertor import Convertor
+from .declarations import DeferredInfo
 
 
 def parse_cli_args(convertor: Convertor[Any]) -> dict[str, Any]:
@@ -34,12 +35,22 @@ def create_command(convertor: Convertor[Any]) -> Callable[..., dict[str, Any]]:
 
 def annotate_parameter(parameter: Parameter) -> Parameter:
     annotation = resolve_aliases(parameter.annotation)
-    metadata = getattr(annotation, "__metadata__", ())
+    metadata = metadata_of(annotation)
     declared_type = annotation.__origin__ if metadata else annotation
     type_ = declared_type | None if parameter.default is None else declared_type
-    infos = (info for info in metadata if isinstance(info, ParameterInfo))
-    info = copy.copy(next(infos, typer.Option()))
-    info.path_type = contained_class_of(type_, Path)
+    info = create_info(metadata)
+    info.path_type = contained_class_of(type_, Path)  # type: ignore[arg-type]
     return parameter.replace(
         annotation=Annotated[type_, info], kind=Parameter.KEYWORD_ONLY
     )
+
+
+def create_info(metadata: tuple[Any, ...]) -> ParameterInfo:
+    infos = (
+        getattr(typer, declaration.name)(*declaration.args, **declaration.kwargs)
+        if isinstance(declaration, DeferredInfo)
+        else declaration
+        for declaration in metadata
+        if isinstance(declaration, DeferredInfo | ParameterInfo)
+    )
+    return copy.copy(next(infos, typer.Option()))

@@ -1,5 +1,4 @@
 import random
-import sys
 from collections.abc import Iterator
 
 import pytest
@@ -33,6 +32,7 @@ from tests.cli.models.dataclass_model_with_string_annotations import (
 )
 from tests.cli.models.help_messages import Help
 from tests.cli.test_create_entry_point import run_with_arguments
+from tests.utils import forbid_imports
 
 
 def text_strategy() -> SearchStrategy[str]:
@@ -391,5 +391,4 @@ def generate_arguments(
 
 
 def forbid_typer(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(sys.modules, "typer", None)
-    monkeypatch.delitem(sys.modules, "package_utils.cli.parser", raising=False)
+    forbid_imports(monkeypatch, "typer", from_module="package_utils.cli.parser")

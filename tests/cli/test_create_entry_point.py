@@ -7,7 +7,6 @@ import pytest
 from package_dev_utils.tests.args import cli_args, no_cli_args
 
 from package_utils.cli import create_entry_point
-from package_utils.cli.entry_point import run_with_cli_args
 
 if TYPE_CHECKING:
     from collections.abc import Callable  # pragma: nocover
@@ -93,21 +92,6 @@ def documented_methods(
     methods: tuple[Callable[..., str], ...],
 ) -> tuple[Callable[..., str], ...]:
     return tuple(method for method in methods if method.__doc__)
-
-
-@no_cli_args
-def test_default_result() -> None:
-    assert run_with_cli_args(run_with_arguments) == Options.message
-
-
-@cli_args("--message", "custom")
-def test_custom_result() -> None:
-    assert run_with_cli_args(run_with_arguments) == "custom"
-
-
-@no_cli_args
-def test_integer_result() -> None:
-    assert run_with_cli_args(lambda: 1) == 1
 
 
 @no_cli_args

@@ -5,9 +5,7 @@ import pytest
 from tests.utils import forbid_imports
 
 
-def test_env_secret_loads_without_subprocess_import(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_loading_without_subprocess(monkeypatch: pytest.MonkeyPatch) -> None:
     name = "package_utils.secrets_"
     forbid_imports(monkeypatch, "shlex", "subprocess", from_module=name)
     monkeypatch.setenv("MY_SECRET", "value")

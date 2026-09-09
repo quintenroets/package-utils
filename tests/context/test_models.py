@@ -1,6 +1,11 @@
+from importlib import import_module
+
+import pytest
+
 from package_utils.context import Context
 from tests.context.models import options_normal_class
 from tests.context.models.models import Config, Options, Secrets
+from tests.utils import forbid_imports
 
 
 def test_empty_context() -> None:
@@ -48,3 +53,10 @@ def test_normal_class_options() -> None:
     assert isinstance(context.options, options_normal_class.Options)
     assert context.config is None
     assert context.secrets is None
+
+
+def test_import_without_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
+    name = "package_utils.context"
+    forbid_imports(monkeypatch, "dacite", "superpathlib", from_module=name)
+    context_module = import_module(name)
+    context_module.Context[None, None, None]()

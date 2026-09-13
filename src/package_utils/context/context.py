@@ -41,7 +41,8 @@ class Context(Generic[Options_, Config_, Secrets_]):
         else:
             optional_path = getattr(self.options, "config_path", None)
             path = typing.cast("Path | None", optional_path)
-            config = model() if path is None else load_from_file(model, path)
+            content = None if path is None else path.cached_yaml
+            config = load_from_dict(model, content) if content else model()
         return typing.cast("Config_", config)
 
     @cached_property
@@ -57,10 +58,9 @@ class Context(Generic[Options_, Config_, Secrets_]):
         )
 
 
-def load_from_file(model: type[T], path: Path) -> T:
+def load_from_dict(model: type[T], content: dict[str, Any]) -> T:
     import dacite  # noqa: PLC0415
     from superpathlib import Path  # noqa: PLC0415
 
     config = dacite.Config(type_hooks={Path: Path}, strict=True)
-    info = typing.cast("dict[str, Any]", path.yaml)
-    return dacite.from_dict(model, info, config=config)
+    return dacite.from_dict(model, content, config=config)

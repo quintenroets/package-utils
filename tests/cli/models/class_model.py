@@ -11,7 +11,7 @@ class Options:
     Options.
     """
 
-    def __init__(  # noqa: PLR0913, PLR0917
+    def __init__(  # noqa: PLR0913
         self,
         action: Parameters.action = dataclass_model.Options.action,
         ignore_paths: Parameters.optional_ignore_paths = None,

@@ -5,7 +5,7 @@ import pytest
 from package_utils.context import Context
 from tests.context.models import options_normal_class
 from tests.context.models.models import Config, Options, Secrets
-from tests.utils import forbid_imports
+from tests.utils import forbid_imports, run_isolated
 
 
 def test_empty_context() -> None:
@@ -60,3 +60,28 @@ def test_import_without_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
     forbid_imports(monkeypatch, "dacite", "superpathlib", from_module=name)
     context_module = import_module(name)
     context_module.Context[None, None, None]()
+
+
+def test_missing_config_file_never_imports_dacite() -> None:
+    """A config that is not there costs no more than constructing its defaults."""
+    source = """
+import sys
+from package_utils.context import Context
+from tests.context.models.models import Config, Options
+context = Context[Options, Config, None](Options=Options, Config=Config)
+assert context.config == Config()
+assert "dacite" not in sys.modules, "a missing config file imported dacite"
+"""
+    run_isolated(source)
+
+
+def test_import_costs_nothing_beyond_stdlib() -> None:
+    """Each loader should cost its dependencies only once someone reaches for it."""
+    source = """
+import sys
+from package_utils.context import Context
+Context[None, None, None]()
+assert "dacite" not in sys.modules, "importing the context imported dacite"
+assert "superpathlib" not in sys.modules, "importing the context imported superpathlib"
+"""
+    run_isolated(source)

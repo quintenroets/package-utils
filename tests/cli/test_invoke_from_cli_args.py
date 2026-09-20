@@ -282,7 +282,7 @@ def test_prefixed_nested_option_not_exposed(class_: type[Options]) -> None:
     optional_message=text_strategy(),
     n_retries=strategies.integers(),
 )
-def test_combined_arguments(  # noqa: PLR0913, PLR0917
+def test_combined_arguments(  # noqa: PLR0913
     class_: type[Options],
     action: Action,
     paths: list[Path],

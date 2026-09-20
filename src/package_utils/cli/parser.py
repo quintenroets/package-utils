@@ -30,6 +30,12 @@ def create_command(convertor: Convertor[Any]) -> Callable[..., dict[str, Any]]:
     command.__doc__ = convertor.documentation
     parameters = [annotate_parameter(parameter) for parameter in convertor.parameters]
     command.__signature__ = Signature(parameters=parameters)  # type: ignore[attr-defined]
+    # typer resolves the annotations itself rather than reading the signature, so
+    # leaving the originals in place would make it evaluate strings that name a
+    # typer a caller deferring its own import never bound
+    command.__annotations__ = {
+        parameter.name: parameter.annotation for parameter in parameters
+    }
     return command
 
 

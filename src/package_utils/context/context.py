@@ -60,7 +60,7 @@ class Context(Generic[Options_, Config_, Secrets_]):
 
 def load_from_dict(model: type[T], content: dict[str, Any]) -> T:
     import dacite  # noqa: PLC0415
-    from superpathlib import Path  # noqa: PLC0415
 
-    config = dacite.Config(type_hooks={Path: Path}, strict=True)
-    return dacite.from_dict(model, content, config=config)
+    from package_utils.dataclasses.mixins import default_config  # noqa: PLC0415
+
+    return dacite.from_dict(model, content, config=default_config)
